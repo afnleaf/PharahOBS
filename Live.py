@@ -108,6 +108,31 @@ def samoa_downtown():
     return
     
 def samoa_volcano():
+    window = pyautogui.getWindowsWithTitle("Overwatch")[0]
+    if(window):
+        # bring window to front
+        window.minimize()
+        window.maximize()
+        # go to objective
+        pyautogui.press("0")
+        pyautogui.press("0")
+        pyautogui.click()
+        # move up
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("e")
+        time.sleep(3)
+        pyautogui.keyUp("e")
+        pyautogui.keyUp("shift")
+        # move forward
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("w")
+        time.sleep(0.2)
+        pyautogui.keyUp("w")
+        pyautogui.keyUp("shift")
+        # move camera down
+        pydirectinput.moveTo(0, 40)        
+    else:
+        print("Overwatch not found.")
     return
 
 # flashpoint
@@ -167,9 +192,62 @@ def gibraltar():
 
 # push
 def colosseo():
+    window = pyautogui.getWindowsWithTitle("Overwatch")[0]
+    if(window):
+        # bring window to front
+        window.minimize()
+        window.maximize()
+        pyautogui.click()
+        # move up
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("e")
+        time.sleep(3.5)
+        pyautogui.keyUp("e")
+        pyautogui.keyUp("shift")
+        # move forward
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("w")
+        pyautogui.keyDown("d")
+        time.sleep(0.7)
+        pyautogui.keyUp("w")
+        pyautogui.keyUp("d")
+        pyautogui.keyUp("shift")
+        # move camera down
+        pydirectinput.moveTo(0, 100)
+        pydirectinput.move(200, None)
+        pydirectinput.move(50, None)
+    else:
+        print("Overwatch not found.")
+    return 
     return
 
 def esperanca():
+    window = pyautogui.getWindowsWithTitle("Overwatch")[0]
+    if(window):
+        # bring window to front
+        window.minimize()
+        window.maximize()
+        # go to objective
+        pyautogui.press("0")
+        pyautogui.press("0")
+        pyautogui.click()
+        # move up
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("e")
+        time.sleep(3)
+        pyautogui.keyUp("e")
+        pyautogui.keyUp("shift")
+        # move forward
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("w")
+        time.sleep(0.2)
+        pyautogui.keyUp("w")
+        pyautogui.keyUp("shift")
+        # move camera down
+        pydirectinput.moveTo(0, 40)        
+    else:
+        print("Overwatch not found.")
+    return
     return
 
 def newqueenstreet():

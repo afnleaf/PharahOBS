@@ -12,7 +12,7 @@ def select_mode():
         if option in ['1', '2']:
             return int(option)
 
-# select map type currently being played
+# select map type currently being played --------------------------------------
 def select_map_type():
     while True:
         print("Select map type:")
@@ -48,7 +48,7 @@ def select_map_type():
         else:
             print("Invalid input.")
 
-# select control map name
+# select control map name -----------------------------------------------------
 def select_control_map():
     while True:
         print("Select control map:")
@@ -92,7 +92,7 @@ def select_control_map():
             print("Invalid input.")
 
 
-# control submaps
+# control submaps -------------------------------------------------------------
 def select_antarctic_submap():
     while True:
         print("Select Antarctic Peninsula submap:")
@@ -314,20 +314,53 @@ def select_samoa_submap():
                 return
     return
 
-
+# -----------------------------------------------------------------------------
 def select_escort_map():
     return
 
-
+# -----------------------------------------------------------------------------
 def select_flashpoint_map():
     return
 
-
+# -----------------------------------------------------------------------------
 def select_hybrid_map():
     return
 
-
+# -----------------------------------------------------------------------------
 def select_push_map():
+    while True:
+        print("Select control map:")
+        print("(1) Colosseo")
+        print("(2) Esperanca")
+        print("(3) New Queens Street")
+        print("(4) Back")
+        option = input("")
+        if option in ['1', '2', '3', '4']:
+            option = int(option)
+            print("You selected ", end="")
+            if option == 1:
+                print("Colosseo.")
+                if mode == 1:
+                    Replay.colosseo()
+                elif mode == 2:
+                    Live.colosseo()
+            elif option == 2:
+                print("Esperanca.")
+                if mode == 1:
+                    Replay.esperanca()
+                elif mode == 2:
+                    Live.esperanca()
+            elif option == 3:
+                print("New Queens Street.")
+                if mode == 1:
+                    Replay.newqueensstreet()
+                elif mode == 2:
+                    Live.newqueensstreet()
+            elif option == 4:
+                print("Back")
+                return
+        else:
+            print("Invalid input.")
     return
 
 

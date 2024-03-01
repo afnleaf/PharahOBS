@@ -84,10 +84,10 @@ Hollywood
 King's Row
 Midtown
 Numbani
-Paraíso
+Paraiso
 
 Push
 Colosseo
-Esperança
+Esperanca
 New Queen Street
 ```

@@ -1,62 +1,6 @@
-'''
-Control
-Antarctic Peninsula
-    Icebreaker
-    Labs
-    Sublevel
-Busan
-    MekaBase
-    Sanctuary
-    Downtown
-Ilios
-    Lighthouse
-    Ruins
-    Well
-Lijiang Tower
-    Control Center
-    Gardens
-    Night Market
-Nepal
-    Sanctum
-    Shrine
-    Village
-Oasis
-    City Center
-    Gardens
-    University
-Samoa
-    Beach
-    Downtown
-    Volcano
-
-Escort
-Circuit Royal
-Dorado
-Havana
-Junkertown 
-Rialto
-Route 66
-Shambali Monastery
-Watchpoint: Gibraltar
-
-Flashpoint
-New Junk City
-Suravasa
-
-Hybrid
-Blizzard World
-Eichenwalde
-Hollywood
-King's Row
-Midtown
-Numbani
-Paraíso
-
-Push
-Colosseo
-Esperança
-New Queen Street
-'''
+import pyautogui
+import pydirectinput
+import time
 
 # Antarctic Peninsula
 def antarctic_icebreaker():
@@ -186,10 +130,92 @@ def gibraltar():
 
 # push
 def colosseo():
+    window = pyautogui.getWindowsWithTitle("Overwatch")[0]
+    if(window):
+        # bring window to front
+        window.minimize()
+        window.maximize()
+        pyautogui.click()
+        pyautogui.hotkey("ctrl", "i")
+        # move up
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("e")
+        time.sleep(4)
+        pyautogui.keyUp("e")
+        pyautogui.keyUp("shift")
+        # move right
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("d")
+        time.sleep(0.3)
+        pyautogui.keyUp("d")
+        pyautogui.keyUp("shift")
+        # move back
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("s")
+        time.sleep(0.4)
+        pyautogui.keyUp("s")
+        pyautogui.keyUp("shift")
+        # move camera down
+        pydirectinput.moveTo(0, 80)
+        #pydirectinput.move(100, None)
+        
+    else:
+        print("Overwatch not found.")
     return
 
 def esperanca():
+    window = pyautogui.getWindowsWithTitle("Overwatch")[0]
+    if(window):
+        # bring window to front
+        window.minimize()
+        window.maximize()
+        pyautogui.click()
+        pyautogui.hotkey("ctrl", "i")
+        # move up
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("e")
+        time.sleep(3.5)
+        pyautogui.keyUp("e")
+        pyautogui.keyUp("shift")
+        # move forward
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("w")
+        pyautogui.keyDown("d")
+        time.sleep(0.7)
+        pyautogui.keyUp("w")
+        pyautogui.keyUp("d")
+        pyautogui.keyUp("shift")
+        # move camera down
+        pydirectinput.moveTo(0, 100)
+        pydirectinput.move(200, None)
+        pydirectinput.move(50, None)
+    else:
+        print("Overwatch not found.")
     return
 
 def newqueenstreet():
+    window = pyautogui.getWindowsWithTitle("Overwatch")[0]
+    if(window):
+        # bring window to front
+        window.minimize()
+        window.maximize()
+        pyautogui.click()
+        pyautogui.hotkey("ctrl", "i")
+        # move up
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("e")
+        time.sleep(3)
+        pyautogui.keyUp("e")
+        pyautogui.keyUp("shift")
+        # move forward
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("s")
+        time.sleep(1)
+        pyautogui.keyUp("s")
+        pyautogui.keyUp("shift")
+        # move camera down
+        pydirectinput.moveTo(0, 40)        
+    else:
+        print("Overwatch not found.")
+    return
     return
