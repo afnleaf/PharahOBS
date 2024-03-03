@@ -37,9 +37,67 @@ def lijiang_controlcenter():
     return
 
 def lijiang_gardens():
+    window = pyautogui.getWindowsWithTitle("Overwatch")[0]
+    if(window):
+        # bring window to front
+        window.minimize()
+        window.maximize()
+        pyautogui.click()
+        pyautogui.press("0")
+        pyautogui.press("0")
+        pyautogui.hotkey("ctrl", "i")
+        # move up
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("e")
+        time.sleep(3)
+        pyautogui.keyUp("e")
+        pyautogui.keyUp("shift")
+        # move backward
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("s")
+        time.sleep(0.4)
+        pyautogui.keyUp("s")
+        pyautogui.keyUp("shift")
+        # move camera down
+        pydirectinput.moveTo(0, 80)
+        #time.sleep(2)
+        #pydirectinput.move(-5, None)
+        #time.sleep(0.5)
+        #pydirectinput.move(50, None)
+    else:
+        print("Overwatch not found.")
     return
     
 def lijiang_nightmarket():
+    window = pyautogui.getWindowsWithTitle("Overwatch")[0]
+    if(window):
+        # bring window to front
+        window.minimize()
+        window.maximize()
+        pyautogui.click()
+        pyautogui.press("0")
+        pyautogui.press("0")
+        pyautogui.hotkey("ctrl", "i")
+        # move up
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("e")
+        time.sleep(2.5)
+        pyautogui.keyUp("e")
+        pyautogui.keyUp("shift")
+        # move backward
+        pyautogui.keyDown("shift")
+        pyautogui.keyDown("s")
+        time.sleep(0.5)
+        pyautogui.keyUp("s")
+        pyautogui.keyUp("shift")
+        # move camera down
+        pydirectinput.moveTo(0, 80)
+        time.sleep(2)
+        pydirectinput.move(-5, None)
+        #time.sleep(0.5)
+        #pydirectinput.move(50, None)
+    else:
+        print("Overwatch not found.")
     return
 
 # Nepal
@@ -217,5 +275,4 @@ def newqueenstreet():
         pydirectinput.moveTo(0, 40)        
     else:
         print("Overwatch not found.")
-    return
     return
