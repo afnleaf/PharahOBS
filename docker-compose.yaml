@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+
+  replaycode-ocr:
+    build:
+      context: ./replaycode-ocr
+    ports:
+      - 8881:8881
+    container_name: replaycode-ocr
+    stdin_open: true
+    tty: true
