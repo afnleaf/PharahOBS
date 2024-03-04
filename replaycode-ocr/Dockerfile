@@ -1,6 +1,6 @@
 FROM python:latest
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
