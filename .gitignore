@@ -1,2 +1,6 @@
 old.txt
 __pycache__/
+/output
+/replaycode-ocr/output
+/replaycode-ocr/old.py
+/old
