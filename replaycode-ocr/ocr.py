@@ -2,6 +2,7 @@ import pytesseract
 from pytesseract import Output
 from PIL import Image
 import cv2 as cv
+import urllib.request
 import numpy as np
 import re
 
@@ -83,16 +84,24 @@ def print_codes(replaycodes):
         print(code)
 
 
-def parse_image(input_filename, template_filename):
-    output_append = '/app/output/result'
-    
-    # load image
-    img_rgb = cv.imread(input_filename)
-    assert img_rgb is not None, "file could not be read, check with os.path.exists()"
+async def load_image_from_url(url):
+    #request = await urllib.request.urlopen(url)
+    #array = np.asarray(bytearray(request.read()), dtype=np.uint8)
+    array = np.asarray(bytearray(url), dtype=np.uint8)
+    image = cv.imdecode(array, -1)
+    return image
 
+def parse_image(img_input, template_filename):
+    print("parse_image")
+    output_append = '/app/output/result'    
+    #img_rgb = cv.imread(input_filename)
+    #assert img_rgb is not None, "file could not be read, check with os.path.exists()"
     #img_gray = cv.cvtColor(img_rgb, cv.COLOR_BGR2GRAY)
     #img_bifilter = cv.bilateralFilter(img_gray,9,75,75)
-    img_final = pre_process_input_image(img_rgb)
+
+    # load image
+    #img_final = pre_process_input_image(img_rgb)
+    img_final = pre_process_input_image(img_input)
     cv.imwrite(output_append + "final.png", img_final)
 
     # load template
@@ -148,11 +157,12 @@ def parse_image(input_filename, template_filename):
     print_codes(replaycodes)
     
     # print codes to file Todo
+    return
 
 # main function
 def main():
-    input_filename = 'image_proc4.jpg'
-    template_filename = 'template_proc.jpg'
+    input_filename = 'images/image_proc4.jpg'
+    template_filename = 'images/template_proc.jpg'
     parse_image(input_filename, template_filename)
 
 # Default notation

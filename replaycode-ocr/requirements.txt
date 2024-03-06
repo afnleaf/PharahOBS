@@ -1,2 +1,4 @@
 pytesseract
 opencv-python-headless
+discord
+python-dotenv

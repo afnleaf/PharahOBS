@@ -4,3 +4,6 @@ __pycache__/
 /replaycode-ocr/output
 /replaycode-ocr/old.py
 /old
+old.py
+.env
+/replaycode-bot
