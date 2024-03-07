@@ -31,26 +31,12 @@ def process_cropped_image(image):
     image = cv.dilate(image, kernel, iterations = 1)
     # erosion
     image = cv.erode(image, kernel, iterations = 1)
-    #opening - erosion followed by dilation
+    # opening - erosion followed by dilation
     image = cv.morphologyEx(image, cv.MORPH_OPEN, kernel)
     # canny
     #image = cv.Canny(image, 100, 200)
 
     return image
-
-
-def process_text1(text):
-    pattern = r'[^a-zA-Z0-9]+\s*(.*)'
-
-    # Search for the pattern in the input string
-    match = re.search(pattern, text)
-
-    if match:
-        # Extract the desired chunk
-        extracted_chunk = match.group(1)
-        print("Extracted chunk:", extracted_chunk)
-    else:
-        print("Pattern not found in the input string.")
 
 
 # process the string given by the tesseract engine
@@ -89,7 +75,13 @@ async def load_image_from_discord(image_data):
     image = cv.imdecode(array, -1)
     return image
 
-def parse_image(img_input, template_filename):
+def load_template(template_filename):
+    template = cv.imread(template_filename, cv.IMREAD_GRAYSCALE)
+    assert template is not None, "file could not be read, check with os.path.exists()"
+    return template
+
+
+def parse_image(img_input, template):
     #print("parse_image")
     output_append = '/app/output/result'    
     #img_rgb = cv.imread(input_filename)
@@ -102,8 +94,6 @@ def parse_image(img_input, template_filename):
     cv.imwrite(output_append + "final.png", img_final)
 
     # load template
-    template = cv.imread(template_filename, cv.IMREAD_GRAYSCALE)
-    assert template is not None, "file could not be read, check with os.path.exists()"
     w, h = template.shape[::-1]
 
     # match template to input
@@ -151,13 +141,14 @@ def parse_image(img_input, template_filename):
     
     return replaycodes
 
+
 # main function
 def main():
     input_filename = 'images/image_proc4.jpg'
     template_filename = 'images/template_proc.jpg'
     parse_image(input_filename, template_filename)
 
+
 # Default notation
 if __name__ == "__main__":
     main()
-

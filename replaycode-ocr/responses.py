@@ -1,8 +1,8 @@
 import ocr
 
-async def get_response(image) -> [str]:
+async def get_response_from_ocr(image) -> [str]:
     image_data = await ocr.load_image_from_discord(image)
-    template = "images/template_proc.jpg"
+    template = ocr.load_template(template_filename="images/template_proc.jpg")
     response: [str] = ocr.parse_image(image_data, template)
     return response
 
