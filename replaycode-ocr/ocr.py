@@ -5,6 +5,7 @@ import cv2 as cv
 import urllib.request
 import numpy as np
 import re
+from MTM import matchTemplates, drawBoxesOnRGB
 
 
 def pre_process_input_image(image):
@@ -83,134 +84,51 @@ def load_template(template_filename):
 
 
 def template_match(img_input, template):
-    print("template_match()")
-    output_append = '/app/output/result'
+    list_of_templates = []
+    output_append = "/app/output/"
 
-    # load image
     img_final = pre_process_input_image(img_input)
-    cv.imwrite(output_append + "final.png", img_final)
+    cv.imwrite(output_append + "input_final.png", img_final)
+    
+    w, h = img_final.shape[::-1]
+    print(f"w:{w} h:{h}")
 
-    found = False
-    # rectangle around location of matched template
-    outbound_w = 115
-    outbound_h = 25 
-    resize_x = 1
-    resize_y = 1
-    scale = 1.2
-    while not found:
-        print(f"{resize_x} {resize_y}")
-        template = cv.resize(template, (0,0), fx=resize_x, fy=resize_y)
-        w, h = template.shape[::-1]
+    # create some templates
+    for i in range(1, 20, 3):
+        template_resized = cv.resize(template, (0,0), fx=1/i, fy=1/i)
+        # check template size isn't larger than input image
+        wr, hr = template_resized.shape[::-1]
 
-        # match template to input
-        # need multiple template sizes for different input image pixel densities
-        result = cv.matchTemplate(img_final, template, cv.TM_CCOEFF_NORMED)
-        threshold = 0.8
-        loc = np.where(result >= threshold)
-
-        i = 0
-        # loop through each locations
-        for pt in zip(*loc[::-1]):
-            found = True
-
-            newptx = pt[0] - 2
-            newpty = pt[1] - 2
-            newpt = newptx, newpty
-
-            # Crop the image around the contour
-            crop = img_final[newpt[1]:newpt[1] + int(outbound_h), newpt[0]:newpt[0] + int(outbound_w)]
-            
-            # process cropped image
-            output_filename_before = output_append + "_before_" + str(i) + ".png"
-            # before
-            cv.imwrite(output_filename_before, crop)
-        
-        if resize_x > 6:
-            break
-
-        resize_x *= scale 
-        resize_y *= scale
-        outbound_w *= scale
-        outbound_h *= scale
-
-    print("return")
-    return
-
-
-def parse_image1(img_input, template):
-    #print("parse_image")
-    output_append = '/app/output/result'    
-
-    # load image
-    img_final = pre_process_input_image(img_input)
-    cv.imwrite(output_append + "final.png", img_final)
-
-    # list of replay codes
-    replaycodes = []
-
-    found = False
-    resize_x = 1
-    resize_y = 1
-    scale = 1.2
-    while not found :
-        template = cv.resize(template, (0,0), fx=resize_x, fy=resize_y)
-        w, h = template.shape[::-1]
-
-        # match template to input
-        # need multiple template sizes for different input image pixel densities
-        result = cv.matchTemplate(img_final, template, cv.TM_CCOEFF_NORMED)
-        threshold = 0.8
-        loc = np.where(result >= threshold)
-
-        resize_x *= scale 
-        resize_y *= scale
-
-        # rectangle around location of matched template
-        outbound_w = 115
-        outbound_h = 25
-        i = 0
-        # loop through each locations
-        for pt in zip(*loc[::-1]):
-            newptx = pt[0] - 2
-            newpty = pt[1] - 2
-            newpt = newptx, newpty
-
-            # Crop the image around the contour
-            crop = img_final[newpt[1]:newpt[1] + outbound_h, newpt[0]:newpt[0] + outbound_w]
-            
-            # process cropped image
-            #output_filename_before = output_append + "_before_" + str(i) + ".png"
-            # before
-            #cv.imwrite(output_filename_before, crop)
-            crop_final = process_cropped_image(crop)
-            # after
-            #output_filename_after = output_append + "_after_" + str(i) + ".png"
-            #cv.imwrite(output_filename_after, crop_final)
-
-            # output code as text
-            text = pytesseract.image_to_string(crop_final)
-            code = process_text(text)
-            # avoid duplicates
-            if code not in replaycodes:
-                replaycodes.append(code)
-
-            i+=1
-
-        # print all replay codes
-        #print_codes(replaycodes)
-        
-    return replaycodes
+        print(f"wr:{wr} hr:{hr}")
+        if wr <= w and hr <= h:
+            print(f"added template{i}")
+            list_of_templates.append((f"template{i}", template_resized))
+            output_filename = output_append + "template" + str(i) + ".png"
+            cv.imwrite(output_filename, template_resized)
 
     
 
-        
+    hits = matchTemplates(list_of_templates,  
+               img_final,  
+               method=cv.TM_CCOEFF_NORMED,  
+               N_object=float("inf"),   
+               score_threshold=0.79,   
+               maxOverlap=0.25,   
+               searchBox=None)
 
+    print(hits)
 
+    image_boxes = drawBoxesOnRGB(img_input, 
+               hits, 
+               boxThickness=2, 
+               boxColor=(255, 255, 00), 
+               showLabel=True,  
+               labelColor=(255, 255, 0), 
+               labelScale=0.5 )
+
+    output_filename = "/app/output/boxes.png"
+    cv.imwrite(output_filename, image_boxes)
     
-
-    
-
-
 
 
 def parse_image(img_input, template):
@@ -276,11 +194,19 @@ def parse_image(img_input, template):
 
 # main function
 def main():
-    input_filename = 'images/image_proc4.jpg'
-    template_filename = 'images/template_proc.jpg'
-    parse_image(input_filename, template_filename)
-
+    input_filename="images/Screenshot_3.png"
+    #input_filename="images/image_proc4.jpg"
+    template_filename="images/template_large.png"
+    #template_filename="images/template_proc.jpg"
+    image = cv.imread(input_filename)
+    template = load_template(template_filename)
+    template_match(image, template)
+    #parse_image(input_filename, template_filename)
+    
 
 # Default notation
 if __name__ == "__main__":
     main()
+
+
+
