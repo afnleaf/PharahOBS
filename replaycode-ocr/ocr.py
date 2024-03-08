@@ -5,6 +5,7 @@ import cv2 as cv
 import urllib.request
 import numpy as np
 import re
+import pandas as pd
 from MTM import matchTemplates, drawBoxesOnRGB
 
 
@@ -94,6 +95,7 @@ def template_match(img_input, template):
     print(f"w:{w} h:{h}")
 
     # create some templates
+    j = 0
     for i in range(1, 20, 3):
         template_resized = cv.resize(template, (0,0), fx=1/i, fy=1/i)
         # check template size isn't larger than input image
@@ -101,13 +103,13 @@ def template_match(img_input, template):
 
         print(f"wr:{wr} hr:{hr}")
         if wr <= w and hr <= h:
-            print(f"added template{i}")
-            list_of_templates.append((f"template{i}", template_resized))
+            print(f"added template{j}")
+            list_of_templates.append((f"{j}", template_resized))
             output_filename = output_append + "template" + str(i) + ".png"
             cv.imwrite(output_filename, template_resized)
+            j += 1
 
-    
-
+    # find matches and store locations in a pandas dataframe
     hits = matchTemplates(list_of_templates,  
                img_final,  
                method=cv.TM_CCOEFF_NORMED,  
@@ -116,8 +118,7 @@ def template_match(img_input, template):
                maxOverlap=0.25,   
                searchBox=None)
 
-    print(hits)
-
+    # draw boxes around templates
     image_boxes = drawBoxesOnRGB(img_input, 
                hits, 
                boxThickness=2, 
@@ -125,10 +126,60 @@ def template_match(img_input, template):
                showLabel=True,  
                labelColor=(255, 255, 0), 
                labelScale=0.5 )
-
     output_filename = "/app/output/boxes.png"
     cv.imwrite(output_filename, image_boxes)
+
+    # where we are storing all the crop data
+    list_of_crops = []
+
+    # find out which template matched
+    # get locations of matches out of the dataframe
+    print(hits)
+    dataframe = pd.DataFrame(hits)
+    #template_indices = dataframe['TemplateName'].tolist()
+    bboxes = dataframe['BBox'].tolist()
+
+    for index, box in enumerate(bboxes):        
+        print(box)
+        # starting location of crop
+        ptx = box[0]
+        pty = box[1]
+        pt = (ptx, pty)
+        # how much to add to start location in width and height
+        # scale width more than height
+        width = int(box[2] * 7)
+        height = int(box[3] * 1.1)
+        crop = img_final[pt[1]:pt[1] + height, pt[0]:pt[0] + width]
+        # before
+        output_filename_before = output_append + "before" + str(index) + ".png"
+        cv.imwrite(output_filename_before, crop)
+        # process our replay code crops
+        crop_final = process_cropped_image(crop)
+        list_of_crops.append(crop_final)
+        # after
+        output_filename_after = output_append + "after_" + str(index) + ".png"
+        cv.imwrite(output_filename_after, crop_final)
+
     
+    return list_of_crops
+
+
+# gonna need a new thing for this why doesnt pytesseract work as good
+def process_codes(list_of_crops):
+    # list of replay code text
+    replaycodes = []
+
+    for crop in list_of_crops:
+        # output code as text
+        text = pytesseract.image_to_string(crop, lang='eng', config='--psm 6')
+        print(text)
+        code = process_text(text)
+        # avoid duplicates
+        if code not in replaycodes:
+            replaycodes.append(code)
+
+    return replaycodes
+
 
 
 def parse_image(img_input, template):
@@ -197,13 +248,14 @@ def main():
     input_filename="images/Screenshot_3.png"
     #input_filename="images/image_proc4.jpg"
     template_filename="images/template_large.png"
-    #template_filename="images/template_proc.jpg"
     image = cv.imread(input_filename)
     template = load_template(template_filename)
-    template_match(image, template)
+    crops = template_match(image, template)
+    replaycodes = process_codes(crops)
+    print_codes(replaycodes)
     #parse_image(input_filename, template_filename)
-    
 
+    
 # Default notation
 if __name__ == "__main__":
     main()

@@ -17,6 +17,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY . .
 
-#CMD [ "python", "./main.py" ]
-CMD [ "python", "./ocr.py" ]
+CMD [ "python", "./main.py" ]
+#CMD [ "python", "./ocr.py" ]
 
