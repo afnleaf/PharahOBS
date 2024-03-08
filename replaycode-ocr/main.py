@@ -21,11 +21,31 @@ async def respond_to_message(message: Message) -> None:
     try:
         if message.attachments:
             for attachment in message.attachments:
-                if attachment.url:
-                    image_data = await attachment.read()
-                    response: [str] = await get_response_from_ocr(image_data)
-                    message_text = replaycodes_to_string(response)
-                    await message.channel.send(message_text)
+                #print(attachment.filename.lower())
+                # accept any image except for gif
+                media_type = attachment.content_type.lower().split("/")
+                if media_type[0] == "image" and not media_type[1] == "gif":
+                    if attachment.url:
+                        # load image
+                        image_data = await attachment.read()
+                        # validate image
+                        
+                        # tell user image is being processed
+                        message_to_channel = await message.channel.send("Processing input...")
+                        # process image
+                        response: [str] = await get_response_from_ocr(image_data)
+                        #message_text = replaycodes_to_string(response)
+                        # await message.channel.send(message_text)
+                        #await message_to_channel.edit(content=message_text)
+                        await message_to_channel.edit(content=response)
+                        # reactions ToDO
+                        # 400 Bad Request (error code: 50035): Invalid Form Body
+                        # replaycode-ocr  | In emoji_id: Value "" is not snowflake.
+                        #await message_to_channel.add_reaction(":white_check_mark:")
+                        #await message_to_channel.add_reaction(":cross_mark:")
+                        # log for testing
+                        print(f"[{message.guild} - {message.channel}] {message.author}: {attachment.url}")
+                        print(response)
     except Exception as e:
         print(e)
 

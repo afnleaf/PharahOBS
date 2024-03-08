@@ -75,10 +75,142 @@ async def load_image_from_discord(image_data):
     image = cv.imdecode(array, -1)
     return image
 
+
 def load_template(template_filename):
     template = cv.imread(template_filename, cv.IMREAD_GRAYSCALE)
     assert template is not None, "file could not be read, check with os.path.exists()"
     return template
+
+
+def template_match(img_input, template):
+    print("template_match()")
+    output_append = '/app/output/result'
+
+    # load image
+    img_final = pre_process_input_image(img_input)
+    cv.imwrite(output_append + "final.png", img_final)
+
+    found = False
+    # rectangle around location of matched template
+    outbound_w = 115
+    outbound_h = 25 
+    resize_x = 1
+    resize_y = 1
+    scale = 1.2
+    while not found:
+        print(f"{resize_x} {resize_y}")
+        template = cv.resize(template, (0,0), fx=resize_x, fy=resize_y)
+        w, h = template.shape[::-1]
+
+        # match template to input
+        # need multiple template sizes for different input image pixel densities
+        result = cv.matchTemplate(img_final, template, cv.TM_CCOEFF_NORMED)
+        threshold = 0.8
+        loc = np.where(result >= threshold)
+
+        i = 0
+        # loop through each locations
+        for pt in zip(*loc[::-1]):
+            found = True
+
+            newptx = pt[0] - 2
+            newpty = pt[1] - 2
+            newpt = newptx, newpty
+
+            # Crop the image around the contour
+            crop = img_final[newpt[1]:newpt[1] + int(outbound_h), newpt[0]:newpt[0] + int(outbound_w)]
+            
+            # process cropped image
+            output_filename_before = output_append + "_before_" + str(i) + ".png"
+            # before
+            cv.imwrite(output_filename_before, crop)
+        
+        if resize_x > 6:
+            break
+
+        resize_x *= scale 
+        resize_y *= scale
+        outbound_w *= scale
+        outbound_h *= scale
+
+    print("return")
+    return
+
+
+def parse_image1(img_input, template):
+    #print("parse_image")
+    output_append = '/app/output/result'    
+
+    # load image
+    img_final = pre_process_input_image(img_input)
+    cv.imwrite(output_append + "final.png", img_final)
+
+    # list of replay codes
+    replaycodes = []
+
+    found = False
+    resize_x = 1
+    resize_y = 1
+    scale = 1.2
+    while not found :
+        template = cv.resize(template, (0,0), fx=resize_x, fy=resize_y)
+        w, h = template.shape[::-1]
+
+        # match template to input
+        # need multiple template sizes for different input image pixel densities
+        result = cv.matchTemplate(img_final, template, cv.TM_CCOEFF_NORMED)
+        threshold = 0.8
+        loc = np.where(result >= threshold)
+
+        resize_x *= scale 
+        resize_y *= scale
+
+        # rectangle around location of matched template
+        outbound_w = 115
+        outbound_h = 25
+        i = 0
+        # loop through each locations
+        for pt in zip(*loc[::-1]):
+            newptx = pt[0] - 2
+            newpty = pt[1] - 2
+            newpt = newptx, newpty
+
+            # Crop the image around the contour
+            crop = img_final[newpt[1]:newpt[1] + outbound_h, newpt[0]:newpt[0] + outbound_w]
+            
+            # process cropped image
+            #output_filename_before = output_append + "_before_" + str(i) + ".png"
+            # before
+            #cv.imwrite(output_filename_before, crop)
+            crop_final = process_cropped_image(crop)
+            # after
+            #output_filename_after = output_append + "_after_" + str(i) + ".png"
+            #cv.imwrite(output_filename_after, crop_final)
+
+            # output code as text
+            text = pytesseract.image_to_string(crop_final)
+            code = process_text(text)
+            # avoid duplicates
+            if code not in replaycodes:
+                replaycodes.append(code)
+
+            i+=1
+
+        # print all replay codes
+        #print_codes(replaycodes)
+        
+    return replaycodes
+
+    
+
+        
+
+
+    
+
+    
+
+
 
 
 def parse_image(img_input, template):
@@ -98,9 +230,9 @@ def parse_image(img_input, template):
 
     # match template to input
     # need multiple template sizes for different input image pixel densities
-    res = cv.matchTemplate(img_final, template, cv.TM_CCOEFF_NORMED)
+    result = cv.matchTemplate(img_final, template, cv.TM_CCOEFF_NORMED)
     threshold = 0.8
-    loc = np.where(res >= threshold)
+    loc = np.where(result >= threshold)
 
     # list of replay codes
     replaycodes = []
@@ -119,13 +251,13 @@ def parse_image(img_input, template):
         crop = img_final[newpt[1]:newpt[1] + outbound_h, newpt[0]:newpt[0] + outbound_w]
         
         # process cropped image
-        #output_filename_before = output_append + "_before_" + str(i) + ".png"
+        output_filename_before = output_append + "_before_" + str(i) + ".png"
         # before
-        #cv.imwrite(output_filename_before, crop)
+        cv.imwrite(output_filename_before, crop)
         crop_final = process_cropped_image(crop)
         # after
-        #output_filename_after = output_append + "_after_" + str(i) + ".png"
-        #cv.imwrite(output_filename_after, crop_final)
+        output_filename_after = output_append + "_after_" + str(i) + ".png"
+        cv.imwrite(output_filename_after, crop_final)
 
         # output code as text
         text = pytesseract.image_to_string(crop_final)
