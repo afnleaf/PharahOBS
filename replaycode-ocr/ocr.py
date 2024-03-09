@@ -2,7 +2,7 @@ import pytesseract
 from pytesseract import Output
 from PIL import Image
 import cv2 as cv
-import urllib.request
+#import urllib.request
 import numpy as np
 import re
 import pandas as pd
@@ -84,30 +84,45 @@ def load_template(template_filename):
     return template
 
 
-def template_match(img_input, template):
-    list_of_templates = []
-    output_append = "/app/output/"
+# create some templates
+def create_templates(template):
+    # where we store our templates
+    list_of_templates = []           
 
-    img_final = pre_process_input_image(img_input)
-    cv.imwrite(output_append + "input_final.png", img_final)
-    
-    w, h = img_final.shape[::-1]
-    print(f"w:{w} h:{h}")
-
-    # create some templates
     j = 0
     for i in range(1, 20, 3):
         template_resized = cv.resize(template, (0,0), fx=1/i, fy=1/i)
-        # check template size isn't larger than input image
-        wr, hr = template_resized.shape[::-1]
+        list_of_templates.append((f"{j}", template_resized))
+        j += 1
+            
+    return list_of_templates
 
-        print(f"wr:{wr} hr:{hr}")
+
+# match templates to input image
+def template_match(img_input, templates):
+    # the directory we will store our images
+    # should go in a config file along with other logging related stuff
+    output_append = "/app/output/"
+
+
+    # process input image
+    img_final = pre_process_input_image(img_input)
+    cv.imwrite(output_append + "input_final.png", img_final)
+    # get width and height of image to check later
+    w, h = img_final.shape[::-1]
+    #print(f"w:{w} h:{h}")
+
+    # check for template size larger than input image
+    list_of_templates = []
+    j = 0
+    for template in templates:
+        wr, hr = template[1].shape[::-1]
+        #print(f"wr:{wr} hr:{hr}")
         if wr <= w and hr <= h:
-            print(f"added template{j}")
-            list_of_templates.append((f"{j}", template_resized))
-            output_filename = output_append + "template" + str(i) + ".png"
-            cv.imwrite(output_filename, template_resized)
-            j += 1
+            list_of_templates.append(template)
+            # write for log
+            output_filename = output_append + "template" + str(j) + ".png"
+            cv.imwrite(output_filename, template[1])
 
     # find matches and store locations in a pandas dataframe
     hits = matchTemplates(list_of_templates,  
@@ -181,7 +196,7 @@ def process_codes(list_of_crops):
     return replaycodes
 
 
-
+# basically a dead function but we keep it in for now
 def parse_image(img_input, template):
     #print("parse_image")
     output_append = '/app/output/result'    
@@ -243,7 +258,7 @@ def parse_image(img_input, template):
     return replaycodes
 
 
-# main function
+# main function, testing mostly
 def main():
     input_filename="images/Screenshot_3.png"
     #input_filename="images/image_proc4.jpg"
@@ -259,6 +274,3 @@ def main():
 # Default notation
 if __name__ == "__main__":
     main()
-
-
-

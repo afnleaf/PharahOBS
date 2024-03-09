@@ -2,7 +2,7 @@ from typing import Final
 import os
 from dotenv import load_dotenv
 from discord import Intents, Client, Message
-from responses import get_response_from_ocr, replaycodes_to_string
+from responses import get_response_from_ocr, replaycodes_to_string, load_templates
 
 # load token safely
 load_dotenv()
@@ -14,7 +14,8 @@ intents: Intents = Intents.default()
 intents.message_content = True 
 intents.messages = True
 client: Client = Client(intents=intents)
-
+# load templates into memory when bot is launched
+list_of_templates = load_templates()
 
 # message functionality
 async def respond_to_message(message: Message) -> None:
@@ -28,12 +29,12 @@ async def respond_to_message(message: Message) -> None:
                     if attachment.url:
                         # load image
                         image_data = await attachment.read()
-                        # validate image
+                        # validate image?
                         
                         # tell user image is being processed
                         message_to_channel = await message.channel.send("Processing input...")
                         # process image
-                        response: [str] = await get_response_from_ocr(image_data)
+                        response: [str] = await get_response_from_ocr(image_data, list_of_templates)
                         #message_text = replaycodes_to_string(response)
                         # await message.channel.send(message_text)
                         #await message_to_channel.edit(content=message_text)
