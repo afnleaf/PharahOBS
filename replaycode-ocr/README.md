@@ -16,9 +16,11 @@ If you would like to run a self hosted version of the bot reach out to me -> @af
 
 ## Problems
 - Pytesseract character recognition issues
-    - 5, 8, 9 vs S
+    - 3, 5, 8, 9 vs S
     - 1 vs I
     - 0 vs O
+    - 8 vs E
+    - D vs O
 
 ## ToDo:
 - [x] message bot directly

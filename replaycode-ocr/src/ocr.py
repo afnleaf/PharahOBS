@@ -91,7 +91,7 @@ def create_templates(template):
     list_of_templates = []           
 
     j = 0
-    for i in range(1, 20, 3):
+    for i in range(1, 30, 3):
         template_resized = cv.resize(template, (0,0), fx=1/i, fy=1/i)
         list_of_templates.append((f"{j}", template_resized))
         j += 1
@@ -196,19 +196,20 @@ def process_codes(list_of_crops):
     return replaycodes
 
 
-# main function, testing mostly
+# main function, testing when bot is in prod
 def main():
-    input_filename="images/Screenshot_3.png"
-    #input_filename="images/image_proc4.jpg"
-    template_filename="images/template_large.png"
-    image = cv.imread(input_filename)
+    template_filename="/app/images/template_large.png"
     template = load_template(template_filename)
-    crops = template_match(image, template)
+    list_of_templates = create_templates(template)
+
+    input_filename="/app/images/test_cases/image_case1.png"
+    #input_filename="/app/images/test_cases/image_proc4.jpg"
+    image = cv.imread(input_filename)
+    crops = template_match(image, list_of_templates)
     replaycodes = process_codes(crops)
     print_codes(replaycodes)
-    #parse_image(input_filename, template_filename)
 
-    
+
 # Default notation
 if __name__ == "__main__":
     main()
