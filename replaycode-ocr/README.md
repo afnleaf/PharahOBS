@@ -18,8 +18,9 @@ post picture in a channel the bot sees, it spits out replay code as text, but on
 - [x] create message then edit it (let user know bot is calculating)
 - [x] template match for high pixel density
 - [x] variable high density sizes for crop
-- [ ] monitor specific channel in a guild (user perms?)
+- [x] logging for testing
+- [x] reactions to output
 - [ ] how to configure bot
-- [ ] logging for testing
-- [ ] reactions to output
+- [ ] refactor respond_to_message()
 - [ ] fixing ocr performance
+- [ ] monitor specific channel in a guild (user perms?)
