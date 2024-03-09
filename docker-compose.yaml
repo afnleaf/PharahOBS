@@ -5,8 +5,6 @@ services:
   replaycode-ocr:
     build:
       context: ./replaycode-ocr
-    ports:
-      - 8881:8881
     container_name: replaycode-ocr
     volumes:
       - ./replaycode-ocr/output:/app/output
