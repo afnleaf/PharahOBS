@@ -1,2 +1,4 @@
 .env
 /images/test_cases
+/output
+/logs
