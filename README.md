@@ -5,4 +5,3 @@ Automated scrim recording tools for OW2.
 
 ## What we are trying to accomplish
 Adding layers of tools to streamline overwatch coaching/managing processes.
-
