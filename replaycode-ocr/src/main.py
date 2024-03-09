@@ -30,40 +30,45 @@ assert list_of_templates is not None, "file could not be read, check with os.pat
 async def respond_to_message(message: Message) -> None:
     try:
         if message.attachments:
+            channel = message.channel
             for attachment in message.attachments:
-                #print(attachment.filename.lower())
                 # accept any image except for gif
                 media_type = attachment.content_type.lower().split("/")
-                if media_type[0] == "image" and not media_type[1] == "gif":
-                    if attachment.url:
-                        # load image
-                        image_data = await attachment.read()
-                        # validate image?
-                        
-                        # tell user image is being processed
-                        message_to_channel = await message.channel.send("Processing input...")
-                        # process image
-                        try:
-                            response: [str] = await responses.get_response_from_ocr(message.id, image_data, list_of_templates)
-                            #message_text = replaycodes_to_string(response)
-                            # await message.channel.send(message_text)
-                            #await message_to_channel.edit(content=message_text)
-                            await message_to_channel.edit(content=response)
-                        except Exception as e:
-                            print(e)
-                            await message_to_channel.edit(content="Error.")
-                            time.sleep(1)
-                            await message_to_channel.delete()
+                if media_type[0] == "image" and not media_type[1] == "gif" and attachment.url:
+                    await process_attachment(message, attachment)
+    except Exception as e:
+        print(e)
 
-                        # reactions
-                        # with this reactions won't be added in dms
-                        if message.guild:
-                            await message_to_channel.add_reaction("✅")
-                            await message_to_channel.add_reaction("❌")
 
-                        # log for testing
-                        print(f"[{message.guild} - {message.channel}] {message.author}: {attachment.url}")
-                        print(response)
+# process actual image found in message
+async def process_attachment(message, attachment) -> None:    
+    try:
+        # load image
+        image_data = await attachment.read()
+    
+        # tell user image is being processed
+        message_to_channel = await message.channel.send("Processing input...")
+
+        # process image
+        try:
+            response: [str] = await responses.get_response_from_ocr(message.id, image_data, list_of_templates)
+            await message_to_channel.edit(content=response)
+        except Exception as e:
+            print(e)
+            await message_to_channel.edit(content="Error.")
+            time.sleep(1)
+            await message_to_channel.delete()
+
+        # reactions
+        # with this reactions won't be added in dms
+        if message.guild:
+            await message_to_channel.add_reaction("✅")
+            await message_to_channel.add_reaction("❌")
+
+        # log for testing
+        print(f"[{message.guild} - {message.channel}] {message.author}: {attachment.url}")
+        print(response)
+
     except Exception as e:
         print(e)
 
@@ -99,15 +104,10 @@ async def on_message(message: Message) -> None:
     # ignore self
     if message.author == client.user:
         return
-    # channel setup to make sure bot only monitors channel with vods
+    # channel setup to make sure bot only monitors channel with vods?
     # check what channel message is in
 
-    #username: str = str(message.author)
-    #user_message: str = message.content
-    #channel: str = str(message.channel)
-    #attachments = message.attachments
-    #print(f"[{channel}] {username}: \"{user_message}\"")
-    #await send_message(message, user_message, attachments)
+    # respond to message in channels where bot sees
     await respond_to_message(message)
 
 
@@ -120,7 +120,8 @@ async def on_raw_reaction_add(payload):
     #print(payload.message_id)
     if payload.emoji.name == "✅":
         print(".nice.")
-        await process_message_id(payload.channel_id, payload.message_id)
+        await process_message_id(payload.channel_id, payload.message_id)\
+            
     elif payload.emoji.name == "❌":
         print(".uhoh.")
         await process_message_id(payload.channel_id, payload.message_id)
