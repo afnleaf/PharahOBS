@@ -1,4 +1,4 @@
-# replaycode-ocr bot
+# Replaycode-ocr Discord Bot
 
 ## Install
 https://discord.com/oauth2/authorize?client_id=1214396853374812211&permissions=68672&scope=bot
@@ -8,10 +8,17 @@ https://discord.com/oauth2/authorize?client_id=1214396853374812211&permissions=6
 - DM the bot if you want to
 - Bot will only process images it can template match
 
+If you would like to run a self hosted version of the bot reach out to me -> @afnckingleaf on twitter or discord.
 
 ## What works
 - Post picture in a channel the bot sees, it spits out replay codes as text, but only if the template is matched.
 - React to the message if it was right or wrong to help out with improving the character recognition.
+
+## Problems
+- Pytesseract character recognition issues
+    - 5, 8, 9 vs S
+    - 1 vs I
+    - 0 vs O
 
 ## ToDo:
 - [x] message bot directly
@@ -21,7 +28,7 @@ https://discord.com/oauth2/authorize?client_id=1214396853374812211&permissions=6
 - [x] variable high density sizes for crop
 - [x] logging for testing
 - [x] reactions to output
-- [ ] refactor respond_to_message()
+- [x] refactor respond_to_message()
 - [ ] how to configure bot
 - [ ] log scraper at end of day
 - [ ] fixing ocr performance
