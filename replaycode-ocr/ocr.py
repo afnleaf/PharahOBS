@@ -1,10 +1,9 @@
-import pytesseract
-#from pytesseract import Output
-from PIL import Image
 import cv2 as cv
 import numpy as np
 import pandas as pd
+import pytesseract
 from MTM import matchTemplates, drawBoxesOnRGB
+from PIL import Image
 
 
 # process input image genius comment

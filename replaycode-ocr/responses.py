@@ -1,5 +1,5 @@
+# local module
 import ocr
-
 
 # manage input image being processed by the ocr
 async def get_response_from_ocr(message_id, image, list_of_templates) -> [str]:

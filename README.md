@@ -1,5 +1,7 @@
 # PharahOBS
-Automated scrim recording for OW2.
+Automated scrim recording tools for OW2.
+
+- replaycode image to text -> [replaycodes-ocr](https://github.com/afnleaf/PharahOBS/tree/main/replaycode-ocr)
 - 3rd person
 - 1st person (someone else already did this but we can add this to this tool)
 
