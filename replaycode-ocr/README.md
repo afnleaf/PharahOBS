@@ -21,6 +21,7 @@ If you would like to run a self hosted version of the bot reach out to me -> @af
     - 0 vs O
     - 8 vs E
     - D vs O
+    - 9 vs O
 
 ## ToDo:
 - [x] message bot directly

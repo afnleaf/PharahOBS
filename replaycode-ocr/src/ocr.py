@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import pytesseract
 from MTM import matchTemplates, drawBoxesOnRGB
-from PIL import Image
+from PIL import Image, ImageEnhance, ImageFilter
 
 
 # process input image genius comment
@@ -18,31 +18,58 @@ def pre_process_input_image(image):
 
 # how to solve the copy problem
 # process each of the matched replaycode images for clearer text
-def process_cropped_image(image):
-    # invert
-    image = cv.bitwise_not(image)
+def process_cropped_image1(image):
     # resize 2x
     image = cv.resize(image, (0,0), fx=24, fy=24)
+    # invert
+    image = cv.bitwise_not(image)
     # remove noise
-    image = cv.medianBlur(image, 5)
+    #image = cv.medianBlur(image, 5)
     #blur = cv.GaussianBlur(gray, (0,0), sigmaX=33, sigmaY=33)
     #divide = cv.divide(gray, blur, scale=255)
     # thresholding
-    image = cv.threshold(image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)[1]
+    #image = cv.threshold(image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)[1]
     # dilation
-    kernel = np.ones((5,5),np.uint8)
-    image = cv.dilate(image, kernel, iterations = 1)
+    #kernel = np.ones((5,5),np.uint8)
+    #image = cv.dilate(image, kernel, iterations = 1)
     # erosion
-    image = cv.erode(image, kernel, iterations = 1)
+    #image = cv.erode(image, kernel, iterations = 1)
     # opening - erosion followed by dilation
-    image = cv.morphologyEx(image, cv.MORPH_OPEN, kernel)
+    #image = cv.morphologyEx(image, cv.MORPH_OPEN, kernel)
     # canny
     #image = cv.Canny(image, 100, 200)
+    #image = image.filter(ImageFilter.MedianFilter())
+    #enhancer = ImageEnhance.Contrast(image)
+    #image = enhancer.enhance(2)
+    #image = image.convert('1')
+
     return image
 
 
-# process the string given by the tesseract model
+def process_cropped_image(image):
+    # resize 2x
+    image = cv.resize(image, (0,0), fx=24, fy=24)
+    # invert
+    image = cv.bitwise_not(image)
+    
+    alpha = 6 # Contrast control
+    beta = 10 # Brightness control
+
+    # call convertScaleAbs function
+    image = cv.convertScaleAbs(image, alpha=alpha, beta=beta)
+    
+    #thresholding 
+    ret2,image = cv.threshold(image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+
+    return image
+
+
 def process_text(text):
+    return text[0:6]
+
+
+# process the string given by the tesseract model
+def process_text_old(text):
     n = len(text)
     start = 0
     end = 0
@@ -186,7 +213,7 @@ def process_codes(list_of_crops):
 
     for crop in list_of_crops:
         # output code as text
-        text = pytesseract.image_to_string(crop, lang='eng', config='--psm 6')
+        text = pytesseract.image_to_string(crop, lang='eng', config='--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
         print(text)
         code = process_text(text)
         # avoid duplicates
