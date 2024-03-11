@@ -91,15 +91,13 @@ async def process_message_id(channel_id, message_id, log_status):
             for attachement in image_message.attachments:
                 print(attachement.url)
                 # post to log channel
-                content = f"[{message.guild} - {message.channel}] {message.author} - "
+                content = f"[{image_message.guild} - {image_message.channel}] {image_message.author} - "
                 if log_status:
                     content += f"✅nice: {attachement.url}"
                 else:
                     content += f"❌uhoh: {attachement.url}"
                 log_channel.send(content)
         print(".end.")
-
-        
 
     return
 
