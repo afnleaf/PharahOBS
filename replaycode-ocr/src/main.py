@@ -95,7 +95,9 @@ async def process_message_id(channel_id, message_id, log_status):
                     content += f"✅nice: {attachement.url}"
                 else:
                     content += f"❌uhoh: {attachement.url}"
-                log_channel = await client.get_channel(log_channel_id)
+                print(log_channel_id)
+                log_channel = client.get_channel(log_channel_id)
+                print(log_channel.id)
                 await log_channel.send(content)
         print(".end.")
 
