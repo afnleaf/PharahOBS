@@ -25,6 +25,10 @@ template_filename="images/template_large.png"
 list_of_templates = responses.load_templates(template_filename)
 assert list_of_templates is not None, "file could not be read, check with os.path.exists()"
 
+# log stuff
+log_channel_id = 1216827457315934418
+log_channel = client.get_channel(log_channel_id)
+
 
 # message functionality
 async def respond_to_message(message: Message) -> None:
@@ -75,7 +79,7 @@ async def process_attachment(message, attachment) -> None:
 
 # reaction adding process prints image url in logs
 # collect .uhoh. to .end. to further improve detection algorithm
-async def process_message_id(channel_id, message_id):
+async def process_message_id(channel_id, message_id, log_status):
     channel = client.get_channel(channel_id)
     if channel:
         response_message = await channel.fetch_message(message_id)
@@ -86,9 +90,17 @@ async def process_message_id(channel_id, message_id):
         if image_message.attachments:
             for attachement in image_message.attachments:
                 print(attachement.url)
+                # post to log channel
+                content = f"[{message.guild} - {message.channel}] {message.author} - "
+                if log_status:
+                    content += f"✅nice: {attachement.url}"
+                else:
+                    content += f"❌uhoh: {attachement.url}"
+                log_channel.send(content)
         print(".end.")
-    else:
-        print(".dm.")
+
+        
+
     return
 
 
@@ -120,11 +132,11 @@ async def on_raw_reaction_add(payload):
     #print(payload.message_id)
     if payload.emoji.name == "✅":
         print(".nice.")
-        await process_message_id(payload.channel_id, payload.message_id)\
+        await process_message_id(payload.channel_id, payload.message_id, True)
             
     elif payload.emoji.name == "❌":
         print(".uhoh.")
-        await process_message_id(payload.channel_id, payload.message_id)
+        await process_message_id(payload.channel_id, payload.message_id, False)
 
 
 # main entry point
