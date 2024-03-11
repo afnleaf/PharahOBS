@@ -32,7 +32,10 @@ If you would like to run a self hosted version of the bot reach out to me -> @af
 - [x] logging for testing
 - [x] reactions to output
 - [x] refactor respond_to_message()
-- [ ] how to configure bot
-- [ ] log scraper at end of day
+- [x] logs go to server
+- [x] sort by order found in image
 - [ ] fixing ocr performance
+
+- [ ] how to configure bot
+
 - [ ] monitor specific channel in a guild (user perms?)

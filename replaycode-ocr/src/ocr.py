@@ -161,9 +161,16 @@ def template_match(img_input, templates):
                maxOverlap=0.25,   
                searchBox=None)
 
+    # sort hits in order found in image, height, y pos, low to high
+    # uses a sorting column of the extracted y values
+    hits['BBox_sort'] = hits['BBox'].apply(lambda y: y[1])
+    hits_sorted = hits.sort_values(by='BBox_sort')
+    
+    #hits_sorted.drop(columns=['BBox_sort'], inplace=True)
+
     # draw boxes around templates
     image_boxes = drawBoxesOnRGB(img_input, 
-               hits, 
+               hits_sorted, 
                boxThickness=2, 
                boxColor=(255, 255, 00), 
                showLabel=True,  
@@ -177,8 +184,8 @@ def template_match(img_input, templates):
 
     # find out which template matched
     # get locations of matches out of the dataframe
-    print(hits)
-    dataframe = pd.DataFrame(hits)
+    print(hits_sorted)
+    dataframe = pd.DataFrame(hits_sorted)
     #template_indices = dataframe['TemplateName'].tolist()
     bboxes = dataframe['BBox'].tolist()
 
@@ -229,7 +236,7 @@ def main():
     template = load_template(template_filename)
     list_of_templates = create_templates(template)
 
-    input_filename="/app/images/test_cases/image_case1.png"
+    input_filename="/app/images/test_cases/image_case2.png"
     #input_filename="/app/images/test_cases/image_proc4.jpg"
     image = cv.imread(input_filename)
     crops = template_match(image, list_of_templates)
