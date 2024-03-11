@@ -52,7 +52,7 @@ def process_cropped_image(image):
     # invert
     image = cv.bitwise_not(image)
     
-    alpha = 6 # Contrast control
+    alpha = 5 # Contrast control
     beta = 10 # Brightness control
 
     # call convertScaleAbs function
@@ -236,7 +236,7 @@ def main():
     template = load_template(template_filename)
     list_of_templates = create_templates(template)
 
-    input_filename="/app/images/test_cases/image_case2.png"
+    input_filename="/app/images/test_cases/image_case3.png"
     #input_filename="/app/images/test_cases/image_proc4.jpg"
     image = cv.imread(input_filename)
     crops = template_match(image, list_of_templates)
