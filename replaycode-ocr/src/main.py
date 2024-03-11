@@ -27,7 +27,7 @@ assert list_of_templates is not None, "file could not be read, check with os.pat
 
 # log stuff
 log_channel_id = 1216827457315934418
-log_channel = client.get_channel(log_channel_id)
+log_channel = await client.get_channel(log_channel_id)
 
 
 # message functionality
@@ -96,10 +96,10 @@ async def process_message_id(channel_id, message_id, log_status):
                     content += f"✅nice: {attachement.url}"
                 else:
                     content += f"❌uhoh: {attachement.url}"
-                log_channel.send(content)
+                await log_channel.send(content)
         print(".end.")
 
-    return
+    return  
 
 
 # handle startup of bot
