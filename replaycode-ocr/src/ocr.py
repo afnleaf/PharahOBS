@@ -184,7 +184,7 @@ def main():
     template = load_template(template_filename)
     list_of_templates = create_templates(template)
 
-    input_filename="/app/images/test_cases/image_case3.png"
+    input_filename="/app/images/test_cases/image_case4.png"
     #input_filename="/app/images/test_cases/image_proc4.jpg"
     image = cv.imread(input_filename)
     crops = template_match(image, list_of_templates)

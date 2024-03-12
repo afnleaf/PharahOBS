@@ -80,8 +80,11 @@ async def process_attachment(message, attachment) -> None:
 # collect .uhoh. to .end. to further improve detection algorithm
 async def process_message_id(channel_id, message_id, log_status):
     channel = client.get_channel(channel_id)
+    print(channel_id)
     if channel:
+        print(message_id)
         response_message = await channel.fetch_message(message_id)
+        print(response_message.content)
         parts = response_message.content.split("\n")
         image_message_id = parts[0]
         image_message = await channel.fetch_message(image_message_id)
