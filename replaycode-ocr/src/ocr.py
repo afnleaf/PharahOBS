@@ -148,12 +148,13 @@ def template_match(img_input, templates):
         #print(box)
 
         # positions for crop
-        template_width = box[2]
+        template_width = box[2] + int(1/box[2]) + 1
         template_height = box[3]
         start_y = box[1]
         end_y = box[1] + template_height + 1 
         start_x = box[0] + template_width + 1
-        end_x = start_x + int(template_width * 4)
+        #end_x = start_x + int(1/pow(template_width, 2))
+        end_x = start_x + template_width * 5
         crop = img_final[start_y:end_y, start_x:end_x]
 
         # before
@@ -186,6 +187,8 @@ def process_codes(list_of_crops):
         if code2 not in replaycodes:
             replaycodes.append(code2)
         print()
+        if index == 4:
+            break
         '''
 
     return replaycodes
@@ -238,8 +241,8 @@ def process_code_mode2(crop):
    
 
         # take first 6 letters
-        if i == 5:
-            break
+        #if i == 5:
+        #   break
 
         i+=1
 
@@ -250,11 +253,14 @@ def process_code_mode2(crop):
     for letter in list_of_letters:
         # extract character out of image
         # first try as a single character
-        character = pytesseract.image_to_string(letter, config=config_psm10)
+        character = pytesseract.image_to_data(letter, config=config_psm10)
+        print(character)
+        #character = pytesseract.image_to_string(letter, config=config_psm10)
         if not character:
             # then try as a single word
             character = pytesseract.image_to_string(letter, config=config_psm8)
-        #print(character)
+
+
         # append first character cause sometimes there are weird stuff
         code += character[0]
     print(f"{code}")
@@ -268,7 +274,7 @@ def main():
     template = load_template(template_filename)
     list_of_templates = create_templates(template)
 
-    input_filename="/app/images/test_cases/image_case8.png"
+    input_filename="/app/images/test_cases/image_case2.png"
     #input_filename="/app/images/test_cases/image_proc5.jpg"
     image = cv.imread(input_filename)
     assert image is not None, "file could not be read, check with os.path.exists()"
