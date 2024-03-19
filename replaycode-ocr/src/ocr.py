@@ -31,13 +31,20 @@ def process_cropped_image(image):
     # invert
     image = cv.bitwise_not(image)
     
-    if y < 300:
-        alpha = 6.5 # Contrast control
-        beta = 20 # Brightness control
-        # call convertScaleAbs function
-        image = cv.convertScaleAbs(image, alpha=alpha, beta=beta)
+    # contrast / brightness control
+    alpha = 4
+    beta = 10
+    # for low resolutions
+    if y < 15:
+        alpha = 7 
+        beta = 20
+    
+    # call convertScaleAbs function
+    image = cv.convertScaleAbs(image, alpha=alpha, beta=beta)
+    
     #thresholding 
-    ret2,image = cv.threshold(image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    _,image = cv.threshold(image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+
 
     return image
 
@@ -52,6 +59,24 @@ def print_codes(replaycodes):
     print("Replay codes:")
     for code in replaycodes:
         print(code)
+
+# turn O into 0s for the test harness
+def process_o1(replaycodes):
+    #list_of_replaycodes = []
+    for code in replaycodes:   
+        for i, c in enumerate(code):
+            if c == "O":
+                code[i] = "0"
+    return replaycodes
+
+
+def process_o(code):
+    code_list = list(code)
+    for i, c in enumerate(code_list):
+        if c == "O":
+            code_list[i] = "0"
+    modified_code = "".join(code_list)
+    return modified_code
 
 
 # process what is given by attachement.read()
@@ -150,11 +175,17 @@ def template_match(img_input, templates):
         template_width = box[2] + int(1/box[2]) + 1
         template_height = box[3]
         start_y = box[1]
-        end_y = box[1] + template_height + 1 
+        end_y = box[1] + template_height + 1
         start_x = box[0] + template_width + 1
         #end_x = start_x + int(1/pow(template_width, 2))
-        end_x = start_x + template_width * 5
-        crop = img_final[start_y:end_y, start_x:end_x]
+        scalefactor = 4.5
+        if box[3] > 28:
+            scalefactor = 5.5
+        elif box[3] < 13:
+            scalefactor = 3.5
+        end_x = start_x + template_width * scalefactor
+        
+        crop = img_final[start_y:int(end_y), start_x:int(end_x)]
 
         # before
         output_filename_before = output_append + "before" + str(index) + ".png"
@@ -177,7 +208,7 @@ def process_codes(list_of_crops):
     for index, crop in enumerate(list_of_crops):
         print(f"code {index + 1}:")
         # method 1, image to boxes
-        code1 = process_code_mode1(crop)
+        code1 = process_code_mode1(crop, index)
         if code1 not in replaycodes:
             replaycodes.append(code1)
         # method 2, letters
@@ -189,19 +220,66 @@ def process_codes(list_of_crops):
         if index == 4:
             break
         '''
-
     return replaycodes
 
-def process_code_mode1(crop):
+def process_code_mode1(crop, index):
     print("method 1")
-    code = ""
+    # get letters
     boxes = pytesseract.image_to_boxes(crop, config=config_psm8)
+    # setup
+    code = ""
+    h, w, = crop.shape
+    # back to rgb instead of grayscale for colour
+    to_box = cv.cvtColor(crop, cv.COLOR_BGR2RGB)
+    # loop through all letters found
     for b in boxes.splitlines():
-        print(f"{b}")
+        print(f"{b} -- ")
         b = b.split(' ')
-        code += b[0]
+        
+        # Get the dimensions of the bounding rect:
+        x1 = int(b[1])
+        x2 = int(b[3])
+        y1 = h - int(b[4])
+        y2 = h - int(b[2])
+        rect_width = x2 - x1
+        rect_height = y2 - y1
+
+        # Compute contour area:
+        contour_area = rect_height * rect_width
+
+        # Compute aspect ratio:
+        reference_ratio = 1.0
+        contour_ratio = rect_width / rect_height
+        epsilon = 1.1
+        ratio_diff = abs(reference_ratio - contour_ratio)
+        #print((ratio_diff, contour_area))
+
+        # add box to letter
+        
+        
+        
+        # if height is much larger than width, ignore
+        # if width is much larger than height, ignore
+        if rect_height < 1.5 * rect_width and rect_width < 1.5 * rect_height:
+            pass
+
+        to_box = cv.rectangle(to_box, (int(b[1]), h - int(b[2])), (int(b[3]), h - int(b[4])), (255, 0, 0), 2)
+
+        
+        # add letter to code
+        if b[0] == "O":
+            code += "0"
+        else:
+            code += b[0]
+
+
     print(f"{code}")
-    return code
+
+    # save boxed image
+    output_filename = f"/app/output/boxed_{index}.png"
+    cv.imwrite(output_filename, to_box)
+    
+    return code.strip()
 
 # get individual letters
 def process_code_mode2(crop):
@@ -219,7 +297,7 @@ def process_code_mode2(crop):
     for b in boxes.splitlines():
         print(f"{b}")
         b = b.split(' ')
-        img = cv.rectangle(tobox, (int(b[1]), h - int(b[2])), (int(b[3]), h - int(b[4])), (0, 255, 0), 2)
+        img = cv.rectangle(tobox, (int(b[1]), h - int(b[2])), (int(b[3]), h - int(b[4])), (255, 255, 0), 2)
         
         # get letter cropped out of image
         y2 = h - int(b[2]) + 2
@@ -269,7 +347,7 @@ def process_code_mode2(crop):
     return code
 
 
-# main function, testing when bot is in prod
+# main function, small testing when bot is in prod
 def main():
     template_filename="/app/images/template_large.png"
     template = load_template(template_filename)

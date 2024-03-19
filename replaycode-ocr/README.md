@@ -35,7 +35,7 @@ If you would like to run a self hosted version of the bot reach out to me -> @af
 - [x] logs go to server
 - [x] sort by order found in image
 - [ ] fixing ocr performance
-- [ ] testing cases for accuraccy increase/decrease with ocr performance testing
+- [x] testing cases for accuracy increase/decrease with ocr performance testing
 
 - [ ] how to configure bot
 - [ ] monitor specific channel in a guild (user perms?)
