@@ -3,4 +3,3 @@ opencv-python-headless
 discord
 python-dotenv
 Multi-Template-Matching
-#easyocr

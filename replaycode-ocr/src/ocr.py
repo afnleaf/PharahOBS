@@ -50,6 +50,7 @@ def process_text(text):
 
 # print replay code list, not used
 def print_codes(replaycodes):
+    print("Replay codes:")
     for code in replaycodes:
         print(code)
 
@@ -144,7 +145,7 @@ def template_match(img_input, templates):
     bboxes = dataframe['BBox'].tolist()
 
     for index, box in enumerate(bboxes):        
-        print(box)
+        #print(box)
 
         # positions for crop
         template_width = box[2]
@@ -173,30 +174,38 @@ def process_codes(list_of_crops):
     # list of replay code text
     replaycodes = []
 
-    for crop in list_of_crops:
+    for index, crop in enumerate(list_of_crops):
+        print(f"code {index + 1}:")
         # method 1, image to boxes
         code1 = process_code_mode1(crop)
         if code1 not in replaycodes:
             replaycodes.append(code1)
-        # method 2, code 
+        # method 2, letters
+        '''
         code2 = process_code_mode2(crop)
         if code2 not in replaycodes:
             replaycodes.append(code2)
+        '''
+        print()
 
     return replaycodes
 
 def process_code_mode1(crop):
+    print("method 1")
     code = ""
     boxes = pytesseract.image_to_boxes(crop, config=config_psm8)
     for b in boxes.splitlines():
+        print(f"{b}")
         b = b.split(' ')
         code += b[0]
+    print(f"{code}")
     return code
 
 # get individual letters
 def process_code_mode2(crop):
+    print("method 2")
     boxes = pytesseract.image_to_boxes(crop, config=config_psm8)
-    print(boxes)
+    #print(boxes)
 
     h, w, = crop.shape
 
@@ -206,7 +215,7 @@ def process_code_mode2(crop):
 
     tobox = crop.copy()
     for b in boxes.splitlines():
-        #print(f"<{b}>")
+        print(f"{b}")
         b = b.split(' ')
         img = cv.rectangle(tobox, (int(b[1]), h - int(b[2])), (int(b[3]), h - int(b[4])), (0, 255, 0), 2)
         
@@ -248,7 +257,7 @@ def process_code_mode2(crop):
         #print(character)
         # append first character cause sometimes there are weird stuff
         code += character[0]
-    print(f"Code: {code}\n")
+    print(f"{code}")
 
     return code
 
@@ -259,7 +268,7 @@ def main():
     template = load_template(template_filename)
     list_of_templates = create_templates(template)
 
-    input_filename="/app/images/test_cases/image_case1.png"
+    input_filename="/app/images/test_cases/image_case7.png"
     #input_filename="/app/images/test_cases/image_proc5.jpg"
     image = cv.imread(input_filename)
     assert image is not None, "file could not be read, check with os.path.exists()"
