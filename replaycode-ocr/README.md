@@ -18,7 +18,7 @@ If you would like to run a self hosted version of the bot reach out to me -> @af
 - Pytesseract character recognition issues
     - 3, 5, 8, 9 vs S
     - 1 vs I
-    - 0 vs O
+    - 0 vs O (Actually the same)
     - 8 vs E
     - D vs O
     - 9 vs O

@@ -153,7 +153,7 @@ def template_match(img_input, templates):
         start_y = box[1]
         end_y = box[1] + template_height + 1 
         start_x = box[0] + template_width + 1
-        end_x = start_x + int(template_width * 3.85)
+        end_x = start_x + int(template_width * 4)
         crop = img_final[start_y:end_y, start_x:end_x]
 
         # before
@@ -185,8 +185,8 @@ def process_codes(list_of_crops):
         code2 = process_code_mode2(crop)
         if code2 not in replaycodes:
             replaycodes.append(code2)
-        '''
         print()
+        '''
 
     return replaycodes
 
@@ -268,7 +268,7 @@ def main():
     template = load_template(template_filename)
     list_of_templates = create_templates(template)
 
-    input_filename="/app/images/test_cases/image_case7.png"
+    input_filename="/app/images/test_cases/image_case8.png"
     #input_filename="/app/images/test_cases/image_proc5.jpg"
     image = cv.imread(input_filename)
     assert image is not None, "file could not be read, check with os.path.exists()"
