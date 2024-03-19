@@ -10,7 +10,7 @@ import responses
 # load token safely
 load_dotenv()
 TOKEN: Final[str] = os.getenv("DISCORD_TOKEN")
-
+LOGID: int = os.getenv("LOG_ID")
 
 # setup bot
 intents: Intents = Intents.default()
@@ -26,7 +26,7 @@ list_of_templates = responses.load_templates(template_filename)
 assert list_of_templates is not None, "file could not be read, check with os.path.exists()"
 
 # log stuff
-log_channel_id = 1216827457315934418
+log_channel_id = LOGID
 
 
 # message functionality

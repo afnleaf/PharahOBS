@@ -1,9 +1,14 @@
 import cv2 as cv
+#import easyocr
 import numpy as np
 import pandas as pd
 import pytesseract
 from MTM import matchTemplates, drawBoxesOnRGB
 from PIL import Image, ImageEnhance, ImageFilter
+
+# run once on import
+config_psm8 = "-l eng --oem 3 --psm 8 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+config_psm10 = "-l eng --oem 3 --psm 10 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 
 # process input image genius comment
@@ -21,11 +26,13 @@ def pre_process_input_image(image):
 def process_cropped_image(image):
     # resize 2x
     image = cv.resize(image, (0,0), fx=24, fy=24)
+    # using exact size for consitency
+    #image = cv.resize(image, (3000, 600))
     # invert
     image = cv.bitwise_not(image)
     
-    alpha = 5 # Contrast control
-    beta = 10 # Brightness control
+    alpha = 6.5 # Contrast control
+    beta = 20 # Brightness control
 
     # call convertScaleAbs function
     image = cv.convertScaleAbs(image, alpha=alpha, beta=beta)
@@ -80,7 +87,6 @@ def template_match(img_input, templates):
     # should go in a config file along with other logging related stuff
     output_append = "/app/output/"
 
-
     # process input image
     img_final = pre_process_input_image(img_input)
     cv.imwrite(output_append + "input_final.png", img_final)
@@ -119,7 +125,7 @@ def template_match(img_input, templates):
     # draw boxes around templates
     image_boxes = drawBoxesOnRGB(img_input, 
                hits_sorted, 
-               boxThickness=2, 
+               boxThickness=1, 
                boxColor=(255, 255, 00), 
                showLabel=True,  
                labelColor=(255, 255, 0), 
@@ -139,15 +145,16 @@ def template_match(img_input, templates):
 
     for index, box in enumerate(bboxes):        
         print(box)
-        # starting location of crop
-        ptx = box[0]
-        pty = box[1]
-        pt = (ptx, pty)
-        # how much to add to start location in width and height
-        # scale width more than height
-        width = int(box[2] * 7)
-        height = int(box[3] * 1.1)
-        crop = img_final[pt[1]:pt[1] + height, pt[0]:pt[0] + width]
+
+        # positions for crop
+        template_width = box[2]
+        template_height = box[3]
+        start_y = box[1]
+        end_y = box[1] + template_height + 1 
+        start_x = box[0] + template_width + 1
+        end_x = start_x + int(template_width * 3.85)
+        crop = img_final[start_y:end_y, start_x:end_x]
+
         # before
         output_filename_before = output_append + "before" + str(index) + ".png"
         cv.imwrite(output_filename_before, crop)
@@ -167,15 +174,83 @@ def process_codes(list_of_crops):
     replaycodes = []
 
     for crop in list_of_crops:
-        # output code as text
-        text = pytesseract.image_to_string(crop, lang='eng', config='--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-        print(text)
-        code = process_text(text)
-        # avoid duplicates
-        if code not in replaycodes:
-            replaycodes.append(code)
+        # method 1, image to boxes
+        code1 = process_code_mode1(crop)
+        if code1 not in replaycodes:
+            replaycodes.append(code1)
+        # method 2, code 
+        code2 = process_code_mode2(crop)
+        if code2 not in replaycodes:
+            replaycodes.append(code2)
 
     return replaycodes
+
+def process_code_mode1(crop):
+    code = ""
+    boxes = pytesseract.image_to_boxes(crop, config=config_psm8)
+    for b in boxes.splitlines():
+        b = b.split(' ')
+        code += b[0]
+    return code
+
+# get individual letters
+def process_code_mode2(crop):
+    boxes = pytesseract.image_to_boxes(crop, config=config_psm8)
+    print(boxes)
+
+    h, w, = crop.shape
+
+    # draw the bounding boxes on the image
+    list_of_letters = []
+    i = 0
+
+    tobox = crop.copy()
+    for b in boxes.splitlines():
+        #print(f"<{b}>")
+        b = b.split(' ')
+        img = cv.rectangle(tobox, (int(b[1]), h - int(b[2])), (int(b[3]), h - int(b[4])), (0, 255, 0), 2)
+        
+        # get letter cropped out of image
+        y2 = h - int(b[2]) + 2
+        y1 = h - int(b[4]) - 2
+        x1 = int(b[1]) - 2
+        x2 = int(b[3]) + 2
+        # whitespace
+        ws = 120
+        #print(f"y: {y1} - {y2}, x: {x1} - {x2}")
+        letter = crop[y1:y2,x1:x2]
+        letter = cv.resize(letter, (0,0), fx=2, fy=2)
+        letter = cv.copyMakeBorder(letter,ws,ws,ws,ws,cv.BORDER_CONSTANT,value=[255,255,255])
+        list_of_letters.append(letter)
+        
+        # save letter image
+        output_filename = f'/app/output/letter{i+1}.jpg'
+        cv.imwrite(output_filename, letter)
+   
+
+        # take first 6 letters
+        if i == 5:
+            break
+
+        i+=1
+
+    output_filename = '/app/output/crop_with_boxes.jpg'
+    cv.imwrite(output_filename, img)
+
+    code = ""
+    for letter in list_of_letters:
+        # extract character out of image
+        # first try as a single character
+        character = pytesseract.image_to_string(letter, config=config_psm10)
+        if not character:
+            # then try as a single word
+            character = pytesseract.image_to_string(letter, config=config_psm8)
+        #print(character)
+        # append first character cause sometimes there are weird stuff
+        code += character[0]
+    print(f"Code: {code}\n")
+
+    return code
 
 
 # main function, testing when bot is in prod
@@ -184,9 +259,10 @@ def main():
     template = load_template(template_filename)
     list_of_templates = create_templates(template)
 
-    input_filename="/app/images/test_cases/image_case4.png"
-    #input_filename="/app/images/test_cases/image_proc4.jpg"
+    input_filename="/app/images/test_cases/image_case1.png"
+    #input_filename="/app/images/test_cases/image_proc5.jpg"
     image = cv.imread(input_filename)
+    assert image is not None, "file could not be read, check with os.path.exists()"
     crops = template_match(image, list_of_templates)
     replaycodes = process_codes(crops)
     print_codes(replaycodes)
