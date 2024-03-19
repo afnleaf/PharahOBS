@@ -10,7 +10,7 @@ import responses
 # load token safely
 load_dotenv()
 TOKEN: Final[str] = os.getenv("DISCORD_TOKEN")
-LOGID: int = os.getenv("LOG_ID")
+LOG_ID: int = os.getenv("LOG_ID")
 
 # setup bot
 intents: Intents = Intents.default()
@@ -24,9 +24,6 @@ client: Client = Client(intents=intents)
 template_filename="images/template_large.png"
 list_of_templates = responses.load_templates(template_filename)
 assert list_of_templates is not None, "file could not be read, check with os.path.exists()"
-
-# log stuff
-log_channel_id = LOGID
 
 
 # message functionality
@@ -98,7 +95,7 @@ async def process_message_id(channel_id, message_id, log_status):
                     content += f"✅nice: {attachement.url}"
                 else:
                     content += f"❌uhoh: {attachement.url}"
-                log_channel = client.get_channel(log_channel_id)
+                log_channel = client.get_channel(int(LOG_ID))
                 await log_channel.send(content)
         print(".end.")
 
