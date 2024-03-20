@@ -112,14 +112,8 @@ def draw_boxes_around_templates(img_input, hits_sorted):
     cv.imwrite(output_filename, image_boxes)
 
 
-# match templates to input image
-def template_match(img_input, templates):
-    # process input image
-    img_final = pre_process_input_image(img_input)
-    #cv.imwrite(output_append + "input_final.png", img_final)
-    # validate templates against input image
-    list_of_templates = get_valid_templates(img_final, templates)
-
+# get locations of template found in input image
+def get_hits(img_final, list_of_templates):
     # find matches and store locations in a pandas dataframe
     hits = matchTemplates(list_of_templates,  
                img_final,  
@@ -130,50 +124,80 @@ def template_match(img_input, templates):
                searchBox=None)
 
     # sort hits in order found in image, height, y pos, low to high
-    # uses a sorting column of the extracted y values
-    hits['BBox_sort'] = hits['BBox'].apply(lambda y: y[1])
-    hits_sorted = hits.sort_values(by='BBox_sort')
-    #hits_sorted.drop(columns=['BBox_sort'], inplace=True)
+    # uses a sorting column of the extracted box
+    hits_sorted = hits.sort_values(by='BBox', key=lambda x: x.str[1])
+    
+    return hits_sorted
 
-    draw_boxes_around_templates(img_input, hits_sorted)
+# match templates to input image
+def template_match(img_input, templates):
+    # process input image
+    img_final = pre_process_input_image(img_input)
+    #cv.imwrite(output_append + "input_final.png", img_final)
+    print("test1")
+    # validate templates against input image
+    list_of_templates = get_valid_templates(img_final, templates)
+    print("test2")
+    # get list of template matches
+    hits = get_hits(img_final, list_of_templates)
+    draw_boxes_around_templates(img_input, hits)
+    print("test3")
+    # get raw cropped codes
+    raw_crops = get_raw_crops(img_final, hits)
+    print("test4")
+    # image processing on codes
+    list_of_crops = process_crops(raw_crops)
+    print("test5")
+    return list_of_crops
 
-    # where we are storing all the crop data
+
+# perform image processing on each cropped code to enhance readability
+def process_crops(raw_crops):
     list_of_crops = []
-    # find out which template matched
-    # get locations of matches out of the dataframe
-    print(hits_sorted)
-    dataframe = pd.DataFrame(hits_sorted)
-    #template_indices = dataframe['TemplateName'].tolist()
-    bboxes = dataframe['BBox'].tolist()
-
-    for index, box in enumerate(bboxes):        
-        #print(box)
-
-        # positions for crop
-        template_width = box[2] + int(1/box[2]) + 1
-        template_height = box[3]
-        start_y = box[1]
-        end_y = box[1] + template_height + 1
-        start_x = box[0] + template_width + 1
-        #end_x = start_x + int(1/pow(template_width, 2))
-        scalefactor = 4.5
-        if box[3] > 28:
-            scalefactor = 5.5
-        elif box[3] < 13:
-            scalefactor = 3.5
-        end_x = start_x + template_width * scalefactor
-        
-        crop = img_final[start_y:int(end_y), start_x:int(end_x)]
-
+    for i, crop in enumerate(raw_crops):
+        print(i)
+        # print crops
         # before
-        output_filename_before = output_append + "before" + str(index) + ".png"
+        output_filename_before = output_append + "before" + str(i) + ".png"
         cv.imwrite(output_filename_before, crop)
         # process our replay code crops
         crop_final = process_cropped_image(crop)
         list_of_crops.append(crop_final)
         # after
-        output_filename_after = output_append + "after_" + str(index) + ".png"
+        output_filename_after = output_append + "after_" + str(i) + ".png"
         cv.imwrite(output_filename_after, crop_final)
+    
+    return list_of_crops
+    
+
+def get_raw_crops(img_final, hits):
+    # get locations of matches out of the dataframe
+    bboxes = hits["BBox"].tolist()
+
+    # where we are storing all the crop data
+    list_of_crops = []
+
+    # loop through each locations
+    for index, box in enumerate(bboxes):        
+            #print(box)
+
+            # positions for crop
+            template_width = box[2] + int(1/box[2]) + 1
+            template_height = box[3]
+            start_y = box[1]
+            end_y = box[1] + template_height + 1
+            start_x = box[0] + template_width + 1
+            #end_x = start_x + int(1/pow(template_width, 2))
+            scalefactor = 4.5
+            if box[3] > 28:
+                scalefactor = 5.5
+            elif box[3] < 13:
+                scalefactor = 3.5
+            end_x = start_x + template_width * scalefactor
+            
+            crop = img_final[start_y:int(end_y), start_x:int(end_x)]
+
+            list_of_crops.append(crop)
 
     return list_of_crops
 
