@@ -14,6 +14,8 @@ config_psm10 = "-l eng --oem 3 --psm 10 -c tessedit_char_whitelist=ABCDEFGHIJKLM
 output_append = "/app/output/"
 
 
+# image processing ------------------------------------------------------------
+
 # process input image genius comment
 # just turn it gray ez
 def pre_process_input_image(image):
@@ -44,6 +46,8 @@ def process_cropped_image(image):
 
     return image
 
+
+# tools  ----------------------------------------------------------------------
 
 # print replay code list, used in testing
 def print_codes(replaycodes):
@@ -80,6 +84,30 @@ def create_templates(template):
     return list_of_templates
 
 
+# template match to generate crops --------------------------------------------
+
+# match templates to input image
+def template_match(img_input, templates):
+    # process input image
+    img_final = pre_process_input_image(img_input)
+    #cv.imwrite(output_append + "input_final.png", img_final)
+
+    # validate templates against input image
+    list_of_templates = get_valid_templates(img_final, templates)
+
+    # get list of template matches
+    hits = get_hits(img_final, list_of_templates)
+    draw_boxes_around_templates(img_input, hits)
+
+    # get raw cropped codes
+    raw_crops = get_raw_crops(img_final, hits)
+
+    # image processing on codes
+    list_of_crops = process_crops(raw_crops)
+    return list_of_crops
+
+
+# out of the generated templates make sure you only match with the valid ones
 def get_valid_templates(img_final, templates):
     # get width and height of image to check later
     w, h = img_final.shape[::-1]
@@ -129,34 +157,12 @@ def get_hits(img_final, list_of_templates):
     
     return hits_sorted
 
-# match templates to input image
-def template_match(img_input, templates):
-    # process input image
-    img_final = pre_process_input_image(img_input)
-    #cv.imwrite(output_append + "input_final.png", img_final)
-    print("test1")
-    # validate templates against input image
-    list_of_templates = get_valid_templates(img_final, templates)
-    print("test2")
-    # get list of template matches
-    hits = get_hits(img_final, list_of_templates)
-    draw_boxes_around_templates(img_input, hits)
-    print("test3")
-    # get raw cropped codes
-    raw_crops = get_raw_crops(img_final, hits)
-    print("test4")
-    # image processing on codes
-    list_of_crops = process_crops(raw_crops)
-    print("test5")
-    return list_of_crops
-
 
 # perform image processing on each cropped code to enhance readability
 def process_crops(raw_crops):
     list_of_crops = []
     for i, crop in enumerate(raw_crops):
-        print(i)
-        # print crops
+        # save crops to folder
         # before
         output_filename_before = output_append + "before" + str(i) + ".png"
         cv.imwrite(output_filename_before, crop)
@@ -170,6 +176,7 @@ def process_crops(raw_crops):
     return list_of_crops
     
 
+# slice crops out of image
 def get_raw_crops(img_final, hits):
     # get locations of matches out of the dataframe
     bboxes = hits["BBox"].tolist()
@@ -202,6 +209,8 @@ def get_raw_crops(img_final, hits):
     return list_of_crops
 
 
+# processed the cropped code images  ------------------------------------------
+
 # gonna need to keep working on this to make it better
 def process_codes(list_of_crops):
     # list of replay code text
@@ -209,22 +218,26 @@ def process_codes(list_of_crops):
 
     for index, crop in enumerate(list_of_crops):
         print(f"code {index + 1}:")
+        
         # method 1, image to boxes
         code1 = process_code_mode1(crop, index)
         if code1 not in replaycodes:
             replaycodes.append(code1)
-        # method 2, letters
-        '''
-        code2 = process_code_mode2(crop)
-        if code2 not in replaycodes:
-            replaycodes.append(code2)
-        print()
-        if index == 4:
-            break
-        '''
+        
+        # method 2, letters ToDo
+        if False:
+            code2 = process_code_mode2(crop)
+            if code2 not in replaycodes:
+                replaycodes.append(code2)
+            # break for specific picture to be analyzed    
+            if index == 4:
+                break
+        
     return replaycodes
 
 
+# process code using image to boxes method
+# filter out bad boxes
 def process_code_mode1(crop, index):
     print("method 1")
     # get letters
@@ -259,7 +272,6 @@ def process_code_mode1(crop, index):
 
         # add box to letter
 
-        
         # if height is much larger than width, ignore
         # if width is much larger than height, ignore
         if rect_height < 1.5 * rect_width and rect_width < 1.5 * rect_height:
@@ -299,7 +311,11 @@ def process_code_mode2(crop):
     for b in boxes.splitlines():
         print(f"{b}")
         b = b.split(' ')
-        img = cv.rectangle(tobox, (int(b[1]), h - int(b[2])), (int(b[3]), h - int(b[4])), (255, 255, 0), 2)
+        img = cv.rectangle(tobox, 
+            (int(b[1]), h - int(b[2])), 
+            (int(b[3]), h - int(b[4])), 
+            (255, 255, 0), 
+            2)
         
         # get letter cropped out of image
         y2 = h - int(b[2]) + 2
@@ -311,14 +327,14 @@ def process_code_mode2(crop):
         #print(f"y: {y1} - {y2}, x: {x1} - {x2}")
         letter = crop[y1:y2,x1:x2]
         letter = cv.resize(letter, (0,0), fx=2, fy=2)
-        letter = cv.copyMakeBorder(letter,ws,ws,ws,ws,cv.BORDER_CONSTANT,value=[255,255,255])
+        letter = cv.copyMakeBorder(letter,ws,ws,ws,ws,
+            cv.BORDER_CONSTANT,value=[255,255,255])
         list_of_letters.append(letter)
         
         # save letter image
         output_filename = f'/app/output/letter{i+1}.jpg'
         cv.imwrite(output_filename, letter)
    
-
         # take first 6 letters
         #if i == 5:
         #   break
@@ -349,7 +365,9 @@ def process_code_mode2(crop):
     return code
 
 
-# main function, small testing when bot is in prod
+# standard --------------------------------------------------------------------
+
+# main function, small testing when bot is in prod 
 def main():
     # load templates
     template_filename="/app/images/template_large.png"
