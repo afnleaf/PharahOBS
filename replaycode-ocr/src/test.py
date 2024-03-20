@@ -44,7 +44,7 @@ def main():
         list_of_replaycodes.append(replaycodes)
 
         # control when testing stops, case - 1
-        #if i == 3:
+        #if i == 1:
         #   break
 
     print("\nTesting:")

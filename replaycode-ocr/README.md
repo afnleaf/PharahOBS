@@ -34,8 +34,8 @@ If you would like to run a self hosted version of the bot reach out to me -> @af
 - [x] refactor respond_to_message()
 - [x] logs go to server
 - [x] sort by order found in image
-- [ ] fixing ocr performance
 - [x] testing cases for accuracy increase/decrease with ocr performance testing
-
+- [x] fixing ocr performance
+- [ ] prod vs test env
 - [ ] how to configure bot
 - [ ] monitor specific channel in a guild (user perms?)

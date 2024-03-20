@@ -14,47 +14,7 @@ config_psm10 = "-l eng --oem 3 --psm 10 -c tessedit_char_whitelist=ABCDEFGHIJKLM
 output_append = "/app/output/"
 
 
-# image processing ------------------------------------------------------------
-
-# process input image genius comment
-# just turn it gray ez
-def pre_process_input_image(image):
-    # grayscale it
-    image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-    return image
-
-
-# how to solve the copy problem
-# process each of the matched replaycode images for clearer text
-def process_cropped_image(image):
-    _, y = image.shape[::-1]
-    # resize 2x
-    image = cv.resize(image, (0,0), fx=24, fy=24)
-    # invert
-    image = cv.bitwise_not(image)
-    # contrast / brightness control
-    alpha = 4
-    beta = 10
-    # for low resolutions
-    if y < 15:
-        alpha = 7 
-        beta = 20
-    # call convertScaleAbs function
-    image = cv.convertScaleAbs(image, alpha=alpha, beta=beta)
-    #thresholding 
-    _,image = cv.threshold(image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
-
-    return image
-
-
 # tools  ----------------------------------------------------------------------
-
-# print replay code list, used in testing
-def print_codes(replaycodes):
-    print("Replay codes:")
-    for code in replaycodes:
-        print(code)
-
 
 # process what is given by attachement.read()
 async def load_image_from_discord(image_data):
@@ -82,6 +42,46 @@ def create_templates(template):
         j += 1
             
     return list_of_templates
+
+
+# print replay code list, used in testing
+def print_codes(replaycodes):
+    print("Replay codes:")
+    for code in replaycodes:
+        print(code)
+
+
+# image processing ------------------------------------------------------------
+
+# process input image genius comment
+# just turn it gray ez
+def pre_process_input_image(image):
+    # grayscale it
+    image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    return image
+
+
+# how to solve the copy problem
+# process each of the matched replaycode images for clearer text
+def process_cropped_image(image):
+    _, y = image.shape[::-1]
+    # resize 2x
+    image = cv.resize(image, (0,0), fx=24, fy=24)
+    # invert
+    image = cv.bitwise_not(image)
+    # contrast / brightness control
+    alpha = 6
+    beta = 11
+    # for low resolutions
+    if y < 15:
+        alpha = 7 
+        beta = 20
+    # call convertScaleAbs function
+    image = cv.convertScaleAbs(image, alpha=alpha, beta=beta)
+    #thresholding 
+    _,image = cv.threshold(image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+
+    return image
 
 
 # template match to generate crops --------------------------------------------
@@ -217,28 +217,97 @@ def process_codes(list_of_crops):
     replaycodes = []
 
     for index, crop in enumerate(list_of_crops):
-        print(f"code {index + 1}:")
+        #print(f"code {index + 1}:")
         
-        # method 1, image to boxes
-        code1 = process_code_mode1(crop, index)
-        if code1 not in replaycodes:
-            replaycodes.append(code1)
-        
-        # method 2, letters ToDo
-        if False:
-            code2 = process_code_mode2(crop)
-            if code2 not in replaycodes:
-                replaycodes.append(code2)
-            # break for specific picture to be analyzed    
-            if index == 4:
-                break
+        # method 1, image to letters to text
+        code = process_code_mode1(crop, index)
+
+        # check for code length, fallback
+        if len(code) < 6:
+            # method 2, image to word to text
+            code = process_code_mode2(crop, index)
+
+        # add code if not already added
+        if code not in replaycodes:
+            replaycodes.append(code)
         
     return replaycodes
 
 
+# find each letter using contours
+def process_code_mode1(crop, index):
+    # our code
+    code = ""
+
+    # back to rgb for drawing bounding box with colour
+    crop_copy = cv.cvtColor(crop, cv.COLOR_BGR2RGB)
+
+    # adaptive threshold to create binary image
+    window_size = 41
+    constant_value = 8
+    binary_image = cv.adaptiveThreshold(crop, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv.THRESH_BINARY_INV, window_size, constant_value)
+
+    # find contours on the binary image
+    contours, _ = cv.findContours(binary_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+
+    # sort bounding boxes
+    bboxes = [cv.boundingRect(c) for c in contours]
+    (contours, bboxes) = zip(*sorted(zip(contours, bboxes),
+        key=lambda b:b[1][0], reverse=False))
+
+    # loop through each bounding box
+    for i, bound_rect in enumerate(bboxes):
+        # Draw the rectangle on the input image:
+        # Get the dimensions of the bounding rect:
+        rect_x = int(bound_rect[0])
+        rect_y = int(bound_rect[1])
+        rect_w = int(bound_rect[2])
+        rect_h = int(bound_rect[3])
+
+        letter = crop[rect_y:rect_y + rect_h, rect_x:rect_x + rect_w]
+        ws = 120
+        # create border around letter for better accuracy
+        letter = cv.copyMakeBorder(letter,ws,ws,ws,ws,
+            cv.BORDER_CONSTANT,value=[255,255,255])
+        cv.imwrite(f"{output_append}char_{i}.png", letter)
+
+        # ocr 
+        character = pytesseract.image_to_string(letter, config=config_psm8)
+        if not character:
+            character = pytesseract.image_to_string(letter, config=config_psm10)
+        #print(f"str <{character.strip()}>")
+
+        # remove whitespace
+        character = character.strip()
+
+        if character == "O":
+            code += "0"
+        
+        elif len(character) > 1:
+            code += character[0]
+        else:
+            code += character
+
+        # green bounding box for testing
+        color = (0, 255, 0)
+        cv.rectangle(crop_copy, (int(rect_x), int(rect_y)),
+                    (int(rect_x + rect_w), int(rect_y + rect_h)), color, 2)
+        output_filename = f"/app/output/boxedcontours_{index}.png"
+        cv.imwrite(output_filename, crop_copy)
+
+        # take first 6 letters
+        if i == 5:
+            break
+
+    #print(code)
+    return code
+
+
+
 # process code using image to boxes method
 # filter out bad boxes
-def process_code_mode1(crop, index):
+def process_code_mode2(crop, index):
     print("method 1")
     # get letters
     boxes = pytesseract.image_to_boxes(crop, config=config_psm8)
@@ -295,75 +364,6 @@ def process_code_mode1(crop, index):
     
     return code.strip()
 
-# get individual letters
-def process_code_mode2(crop):
-    print("method 2")
-    boxes = pytesseract.image_to_boxes(crop, config=config_psm8)
-    #print(boxes)
-
-    h, w, = crop.shape
-
-    # draw the bounding boxes on the image
-    list_of_letters = []
-    i = 0
-
-    tobox = crop.copy()
-    for b in boxes.splitlines():
-        print(f"{b}")
-        b = b.split(' ')
-        img = cv.rectangle(tobox, 
-            (int(b[1]), h - int(b[2])), 
-            (int(b[3]), h - int(b[4])), 
-            (255, 255, 0), 
-            2)
-        
-        # get letter cropped out of image
-        y2 = h - int(b[2]) + 2
-        y1 = h - int(b[4]) - 2
-        x1 = int(b[1]) - 2
-        x2 = int(b[3]) + 2
-        # whitespace
-        ws = 120
-        #print(f"y: {y1} - {y2}, x: {x1} - {x2}")
-        letter = crop[y1:y2,x1:x2]
-        letter = cv.resize(letter, (0,0), fx=2, fy=2)
-        letter = cv.copyMakeBorder(letter,ws,ws,ws,ws,
-            cv.BORDER_CONSTANT,value=[255,255,255])
-        list_of_letters.append(letter)
-        
-        # save letter image
-        output_filename = f'/app/output/letter{i+1}.jpg'
-        cv.imwrite(output_filename, letter)
-   
-        # take first 6 letters
-        #if i == 5:
-        #   break
-
-        i+=1
-
-    output_filename = '/app/output/crop_with_boxes.jpg'
-    cv.imwrite(output_filename, img)
-
-    code = ""
-    for letter in list_of_letters:
-        # extract character out of image
-        # first try as a single character
-        #character = pytesseract.image_to_data(letter, config=config_psm10)
-        character = pytesseract.image_to_string(letter, config=config_psm10)
-        print(character)
-        if not character:
-            # then try as a single word
-            character = pytesseract.image_to_string(letter, config=config_psm8)
-        print(character)
-        # invalid
-        if not character:
-            continue
-        # append first character cause sometimes there are weird stuff
-        code += character[0]
-    print(f"{code}")
-
-    return code
-
 
 # standard --------------------------------------------------------------------
 
@@ -374,7 +374,7 @@ def main():
     template = load_template(template_filename)
     list_of_templates = create_templates(template)
     # test an image
-    input_filename="/app/images/test_cases/image_case1.png"
+    input_filename="/app/images/test_cases/image_case13.png"
     image = cv.imread(input_filename)
     assert image is not None, "file could not be read, check with os.path.exists()"
     crops = template_match(image, list_of_templates)
