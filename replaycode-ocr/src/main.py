@@ -92,6 +92,9 @@ async def process_message_id(channel_id, message_id, log_status):
                 content = f"[{image_message.guild} - {image_message.channel}] {image_message.author} - "
                 if log_status:
                     content += f"✅nice: {attachement.url}"
+                    meow = channel.send("meow")
+                    time.sleep(2)
+                    meow.delete()
                 else:
                     content += f"❌uhoh: {attachement.url}"
                 log_channel = client.get_channel(int(LOG_ID))
