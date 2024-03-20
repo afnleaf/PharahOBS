@@ -1,14 +1,17 @@
 import cv2 as cv
-#import easyocr
 import numpy as np
 import pandas as pd
 import pytesseract
 from MTM import matchTemplates, drawBoxesOnRGB
 from PIL import Image, ImageEnhance, ImageFilter
 
+
+# should go in a config file along with other logging related stuff
 # run once on import
 config_psm8 = "-l eng --oem 3 --psm 8 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 config_psm10 = "-l eng --oem 3 --psm 10 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+# the directory we will store our images
+output_append = "/app/output/"
 
 
 # process input image genius comment
@@ -16,21 +19,17 @@ config_psm10 = "-l eng --oem 3 --psm 10 -c tessedit_char_whitelist=ABCDEFGHIJKLM
 def pre_process_input_image(image):
     # grayscale it
     image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-    # thresholding? not needed?
-    #image = cv.threshold(image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)[1]
     return image
 
 
 # how to solve the copy problem
 # process each of the matched replaycode images for clearer text
 def process_cropped_image(image):
-    x, y = image.shape[::-1]
-    
+    _, y = image.shape[::-1]
     # resize 2x
     image = cv.resize(image, (0,0), fx=24, fy=24)
     # invert
     image = cv.bitwise_not(image)
-    
     # contrast / brightness control
     alpha = 4
     beta = 10
@@ -38,45 +37,19 @@ def process_cropped_image(image):
     if y < 15:
         alpha = 7 
         beta = 20
-    
     # call convertScaleAbs function
     image = cv.convertScaleAbs(image, alpha=alpha, beta=beta)
-    
     #thresholding 
     _,image = cv.threshold(image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
-
 
     return image
 
 
-# process the string given by the tesseract model, simple slice
-def process_text(text):
-    return text[0:6]
-
-
-# print replay code list, not used
+# print replay code list, used in testing
 def print_codes(replaycodes):
     print("Replay codes:")
     for code in replaycodes:
         print(code)
-
-# turn O into 0s for the test harness
-def process_o1(replaycodes):
-    #list_of_replaycodes = []
-    for code in replaycodes:   
-        for i, c in enumerate(code):
-            if c == "O":
-                code[i] = "0"
-    return replaycodes
-
-
-def process_o(code):
-    code_list = list(code)
-    for i, c in enumerate(code_list):
-        if c == "O":
-            code_list[i] = "0"
-    modified_code = "".join(code_list)
-    return modified_code
 
 
 # process what is given by attachement.read()
@@ -86,9 +59,10 @@ async def load_image_from_discord(image_data):
     return image
 
 
+# load template into memory via given filename
 def load_template(template_filename):
     template = cv.imread(template_filename, cv.IMREAD_GRAYSCALE)
-    assert template is not None, "file could not be read, check with os.path.exists()"
+    assert template is not None, "File could not be read."
     return template
 
 
@@ -106,30 +80,45 @@ def create_templates(template):
     return list_of_templates
 
 
-# match templates to input image
-def template_match(img_input, templates):
-    # the directory we will store our images
-    # should go in a config file along with other logging related stuff
-    output_append = "/app/output/"
-
-    # process input image
-    img_final = pre_process_input_image(img_input)
-    cv.imwrite(output_append + "input_final.png", img_final)
+def get_valid_templates(img_final, templates):
     # get width and height of image to check later
     w, h = img_final.shape[::-1]
     #print(f"w:{w} h:{h}")
-
     # check for template size larger than input image
     list_of_templates = []
-    j = 0
-    for template in templates:
+    for j, template in enumerate(templates):
         wr, hr = template[1].shape[::-1]
         #print(f"wr:{wr} hr:{hr}")
         if wr <= w and hr <= h:
             list_of_templates.append(template)
             # write for log
-            output_filename = output_append + "template" + str(j) + ".png"
-            cv.imwrite(output_filename, template[1])
+            #output_filename = output_append + "template" + str(j) + ".png"
+            #cv.imwrite(output_filename, template[1])
+
+    return list_of_templates
+
+
+# draw boxes to see the templates in the input image
+def draw_boxes_around_templates(img_input, hits_sorted):
+    # draw boxes around templates
+    image_boxes = drawBoxesOnRGB(img_input, 
+               hits_sorted, 
+               boxThickness=1, 
+               boxColor=(255, 255, 00), 
+               showLabel=True,  
+               labelColor=(255, 255, 0), 
+               labelScale=0.5 )
+    output_filename = output_append + "boxes.png"
+    cv.imwrite(output_filename, image_boxes)
+
+
+# match templates to input image
+def template_match(img_input, templates):
+    # process input image
+    img_final = pre_process_input_image(img_input)
+    #cv.imwrite(output_append + "input_final.png", img_final)
+    # validate templates against input image
+    list_of_templates = get_valid_templates(img_final, templates)
 
     # find matches and store locations in a pandas dataframe
     hits = matchTemplates(list_of_templates,  
@@ -144,23 +133,12 @@ def template_match(img_input, templates):
     # uses a sorting column of the extracted y values
     hits['BBox_sort'] = hits['BBox'].apply(lambda y: y[1])
     hits_sorted = hits.sort_values(by='BBox_sort')
-    
     #hits_sorted.drop(columns=['BBox_sort'], inplace=True)
 
-    # draw boxes around templates
-    image_boxes = drawBoxesOnRGB(img_input, 
-               hits_sorted, 
-               boxThickness=1, 
-               boxColor=(255, 255, 00), 
-               showLabel=True,  
-               labelColor=(255, 255, 0), 
-               labelScale=0.5 )
-    output_filename = "/app/output/boxes.png"
-    cv.imwrite(output_filename, image_boxes)
+    draw_boxes_around_templates(img_input, hits_sorted)
 
     # where we are storing all the crop data
     list_of_crops = []
-
     # find out which template matched
     # get locations of matches out of the dataframe
     print(hits_sorted)
@@ -222,6 +200,7 @@ def process_codes(list_of_crops):
         '''
     return replaycodes
 
+
 def process_code_mode1(crop, index):
     print("method 1")
     # get letters
@@ -255,8 +234,7 @@ def process_code_mode1(crop, index):
         #print((ratio_diff, contour_area))
 
         # add box to letter
-        
-        
+
         
         # if height is much larger than width, ignore
         # if width is much larger than height, ignore
@@ -349,12 +327,12 @@ def process_code_mode2(crop):
 
 # main function, small testing when bot is in prod
 def main():
+    # load templates
     template_filename="/app/images/template_large.png"
     template = load_template(template_filename)
     list_of_templates = create_templates(template)
-
+    # test an image
     input_filename="/app/images/test_cases/image_case1.png"
-    #input_filename="/app/images/test_cases/image_proc5.jpg"
     image = cv.imread(input_filename)
     assert image is not None, "file could not be read, check with os.path.exists()"
     crops = template_match(image, list_of_templates)
