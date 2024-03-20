@@ -4,7 +4,6 @@ from discord import Intents, Client, Message, Emoji
 from dotenv import load_dotenv
 from typing import Final
 # local modules
-#responses import get_response_from_ocr, replaycodes_to_string, load_templates
 import responses
 
 # load token safely
