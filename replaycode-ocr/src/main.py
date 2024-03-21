@@ -130,17 +130,25 @@ async def on_raw_reaction_add(payload):
     # ignore when in dm or bot adding two reactions on message creation
     if not payload.member or payload.member == client.user:
         return
+
+    emoji = payload.emoji.name
+
     #print(payload.message_id)
-    if payload.emoji.name == "✅":
+    if emoji == "✅":
         print(".nice.")
         await process_message_id(payload.channel_id, payload.message_id, True)
             
-    elif payload.emoji.name == "❌":
+    elif emoji == "❌":
         print(".uhoh.")
         await process_message_id(payload.channel_id, payload.message_id, False)
 
-    elif payload.emoji.name == "🍕":
+    elif emoji == "🍕":
         msg = await channel.send("mama mia")
+        time.sleep(2)
+        await msg.delete()
+
+    elif emoji == "🍧" or emoji == "🍨" or emoji == "🍦":
+        msg = await channel.send("mmm ice cream so good 😜")
         time.sleep(2)
         await msg.delete()
 
