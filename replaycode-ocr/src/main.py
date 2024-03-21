@@ -138,6 +138,11 @@ async def on_raw_reaction_add(payload):
         print(".uhoh.")
         await process_message_id(payload.channel_id, payload.message_id, False)
 
+    elif payload.emoji.name == "🍕":
+        msg = await payload.channel.send("mama mia")
+        time.sleep(2)
+        await msg.delete()
+
 
 # main entry point
 def main() -> None:
