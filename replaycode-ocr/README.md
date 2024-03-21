@@ -39,3 +39,11 @@ If you would like to run a self hosted version of the bot reach out to me -> @af
 - [ ] prod vs test env
 - [ ] how to configure bot
 - [ ] monitor specific channel in a guild (user perms?)
+
+# Environment
+
+```
+DISCORD_TOKEN=<token>
+LOG_ID=<id>
+ENVIRONMENT= test | prod
+```

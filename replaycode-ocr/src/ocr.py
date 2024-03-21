@@ -1,10 +1,15 @@
 import cv2 as cv
 import numpy as np
+import os
 import pandas as pd
 import pytesseract
+from dotenv import load_dotenv
 from MTM import matchTemplates, drawBoxesOnRGB
 from PIL import Image, ImageEnhance, ImageFilter
 
+# to enable testing functionality
+load_dotenv()
+TEST: bool = True if str(os.getenv("ENVIRONMENT")) == "test" else False
 
 # should go in a config file along with other logging related stuff
 # run once on import
@@ -136,8 +141,9 @@ def draw_boxes_around_templates(img_input, hits_sorted):
                showLabel=True,  
                labelColor=(255, 255, 0), 
                labelScale=0.5 )
-    output_filename = output_append + "boxes.png"
-    cv.imwrite(output_filename, image_boxes)
+    if TEST:
+        output_filename = output_append + "boxes.png"
+        cv.imwrite(output_filename, image_boxes)
 
 
 # get locations of template found in input image
@@ -164,14 +170,16 @@ def process_crops(raw_crops):
     for i, crop in enumerate(raw_crops):
         # save crops to folder
         # before
-        output_filename_before = output_append + "before" + str(i) + ".png"
-        cv.imwrite(output_filename_before, crop)
+        if TEST:
+            output_filename_before = output_append + "before" + str(i) + ".png"
+            cv.imwrite(output_filename_before, crop)
         # process our replay code crops
         crop_final = process_cropped_image(crop)
         list_of_crops.append(crop_final)
         # after
-        output_filename_after = output_append + "after_" + str(i) + ".png"
-        cv.imwrite(output_filename_after, crop_final)
+        if TEST:
+            output_filename_after = output_append + "after_" + str(i) + ".png"
+            cv.imwrite(output_filename_after, crop_final)
     
     return list_of_crops
     
@@ -270,7 +278,8 @@ def process_code_mode1(crop, index):
         # create border around letter for better accuracy
         letter = cv.copyMakeBorder(letter,ws,ws,ws,ws,
             cv.BORDER_CONSTANT,value=[255,255,255])
-        cv.imwrite(f"{output_append}char_{i}.png", letter)
+        if TEST:
+            cv.imwrite(f"{output_append}char_{i}.png", letter)
 
         # ocr 
         character = pytesseract.image_to_string(letter, config=config_psm8)
@@ -294,7 +303,8 @@ def process_code_mode1(crop, index):
         cv.rectangle(crop_copy, (int(rect_x), int(rect_y)),
                     (int(rect_x + rect_w), int(rect_y + rect_h)), color, 2)
         output_filename = f"/app/output/boxedcontours_{index}.png"
-        cv.imwrite(output_filename, crop_copy)
+        if TEST:
+            cv.imwrite(output_filename, crop_copy)
 
         # take first 6 letters
         if i == 5:
@@ -359,8 +369,9 @@ def process_code_mode2(crop, index):
     print(f"{code}")
 
     # save boxed image
-    output_filename = f"/app/output/boxed_{index}.png"
-    cv.imwrite(output_filename, to_box)
+    if TEST:
+        output_filename = f"/app/output/boxed_{index}.png"
+        cv.imwrite(output_filename, to_box)
     
     return code.strip()
 
