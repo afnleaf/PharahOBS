@@ -142,17 +142,17 @@ async def on_raw_reaction_add(payload):
         print(".uhoh.")
         await process_message_id(payload.channel_id, payload.message_id, False)
 
-    elif emoji == "🍕":
+    elif emoji == "\U0001F355":
         msg = await channel.send("mama mia")
         time.sleep(2)
         await msg.delete()
 
-    elif emoji == "🍧" or emoji == "🍨" or emoji == "🍦":
-        msg = await channel.send("mmm ice cream so good 😜")
+    elif emoji == "\U0001F367" or emoji == "\U0001F366"::
+        msg = await channel.send("mmm ice cream so good, yes yes yes, gang gang, gang gang")
         time.sleep(2)
         await msg.delete()
 
-
+    
 # main entry point
 def main() -> None:
     client.run(token=TOKEN)
