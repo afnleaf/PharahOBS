@@ -147,7 +147,12 @@ async def on_raw_reaction_add(payload):
         time.sleep(2)
         await msg.delete()
 
-    elif emoji == "🍧" or emoji == "🍦" or emoji == "🍨":
+    elif emoji == "🍧":
+        msg = await channel.send("👅👅👅")
+        time.sleep(2)
+        await msg.delete()
+
+    elif emoji == "🍦" or emoji == "🍨":
         msg = await channel.send("mmm ice cream so good, yes yes yes, gang gang, gang gang")
         time.sleep(2)
         await msg.delete()
