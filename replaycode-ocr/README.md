@@ -16,12 +16,9 @@ If you would like to run a self hosted version of the bot reach out to me -> @af
 
 ## Problems
 - Pytesseract character recognition issues
-    - 3, 5, 8, 9 vs S
-    - 1 vs I
-    - 0 vs O (Actually the same)
-    - 8 vs E
-    - D vs O
-    - 9 vs O
+    - X vs 4
+    - Q vs 0
+    - 0 vs 6
 
 ## ToDo:
 - [x] message bot directly
@@ -36,11 +33,13 @@ If you would like to run a self hosted version of the bot reach out to me -> @af
 - [x] sort by order found in image
 - [x] testing cases for accuracy increase/decrease with ocr performance testing
 - [x] fixing ocr performance
-- [ ] prod vs test env
+- [x] prod vs test env
+- [ ] map recognition
 - [ ] how to configure bot
 - [ ] monitor specific channel in a guild (user perms?)
+- [ ] result of map
 
-# Environment
+## Environment
 
 ```
 DISCORD_TOKEN=<token>
