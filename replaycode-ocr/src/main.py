@@ -126,6 +126,7 @@ async def on_message(message: Message) -> None:
 # handle incoming reactions
 @client.event
 async def on_raw_reaction_add(payload):
+    channel = client.get_channel(payload.channel_id)
     # ignore when in dm or bot adding two reactions on message creation
     if not payload.member or payload.member == client.user:
         return
@@ -139,7 +140,7 @@ async def on_raw_reaction_add(payload):
         await process_message_id(payload.channel_id, payload.message_id, False)
 
     elif payload.emoji.name == "🍕":
-        msg = await payload.channel.send("mama mia")
+        msg = await channel.send("mama mia")
         time.sleep(2)
         await msg.delete()
 
