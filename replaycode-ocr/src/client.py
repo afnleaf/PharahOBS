@@ -1,4 +1,5 @@
 import os
+import random
 import time
 from discord import Intents, Client, Message, Emoji
 from dotenv import load_dotenv
@@ -137,7 +138,10 @@ async def on_raw_reaction_add(payload):
     if emoji == "✅":
         print(".nice.")
         await process_message_id(payload.channel_id, payload.message_id, True)
-            
+        n = random.random()
+        if n < 0.33:
+            payload.add_reaction("🍦")
+
     elif emoji == "❌":
         print(".uhoh.")
         await process_message_id(payload.channel_id, payload.message_id, False)
