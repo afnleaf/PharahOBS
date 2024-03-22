@@ -127,7 +127,7 @@ async def on_message(message: Message) -> None:
 # handle incoming reactions
 @client.event
 async def on_raw_reaction_add(payload):
-    channel = await client.get_channel(payload.channel_id)
+    channel = client.get_channel(payload.channel_id)
     # ignore when in dm or bot adding two reactions on message creation
     if not payload.member or payload.member == client.user:
         return
