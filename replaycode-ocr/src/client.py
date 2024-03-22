@@ -138,13 +138,18 @@ async def on_raw_reaction_add(payload):
     if emoji == "✅":
         print(".nice.")
         #await process_message_id(payload.channel_id, payload.message_id, True)
-        n = random.random()
-        print(n)
-        if n < 0.33:
-            print("test")
-            msg = await channel.fetch_message(payload.message_id)
-            await msg.add_reaction("🍦")
-            
+        msg = await channel.fetch_message(payload.message_id)
+        n = int(random.random() * 3)
+        content = "🍕"
+        if n == 1:
+            content = "🍦"
+        elif n == 2:
+            content = "🍨"
+        else:
+            content = "🍧"
+        
+        if n < 0.33:            
+            await msg.add_reaction(content)
 
     elif emoji == "❌":
         print(".uhoh.")
