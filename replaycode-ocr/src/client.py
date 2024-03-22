@@ -139,16 +139,18 @@ async def on_raw_reaction_add(payload):
         print(".nice.")
         #await process_message_id(payload.channel_id, payload.message_id, True)
         msg = await channel.fetch_message(payload.message_id)
-        n = random.random() * 3
+        n = random.random() * 4
         print(n)
-        content = "🍕"
+        
         if n >= 0 and n < 1:
             content = "🍦"
         elif n >= 1 and n < 2:
             content = "🍨"
-        elif n >= 2 and n <= 3:
+        elif n >= 2 and n < 3:
             content = "🍧"
-        
+        elif n >= 3 and n <= 4:
+            content = "🍕"
+
         if n < 2:            
             await msg.add_reaction(content)
 
