@@ -142,7 +142,8 @@ async def on_raw_reaction_add(payload):
         print(n)
         if n < 0.33:
             print("test")
-            await channel.fetch_message(payload.message_id).add_reaction("🍦")
+            msg = channel.fetch_message(payload.message_id)
+            await msg.add_reaction("🍦")
             
 
     elif emoji == "❌":
