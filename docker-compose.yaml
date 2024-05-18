@@ -8,3 +8,4 @@ services:
       - ./replaycode-ocr/output:/app/output
     stdin_open: true
     tty: true
+    restart: unless-stopped

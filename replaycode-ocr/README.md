@@ -39,6 +39,97 @@ If you would like to run a self hosted version of the bot reach out to me -> @af
 - [ ] monitor specific channel in a guild (user perms?)
 - [ ] result of map
 
+## Map Recognition
+```
+Control
+- [ ] Antarctic Peninsula
+    - night
+    - morning
+- [ ] Busan
+    - overcast
+    - night
+    - morning
+- [ ] Ilios
+    - evening
+    - morning
+- [ ] Lijiang Tower
+    - dawn
+    - night
+    - new year
+- [ ] Nepal
+    - evening
+    - morning
+- [ ] Oasis
+    - evening
+    - night
+    - morning
+- [ ] Samoa
+
+Escort
+- [ ] Circuit Royal
+    - morning
+    - night
+- [ ] Dorado
+    - evening
+    - night
+- [ ] Havana
+    - morning
+    - night
+- [ ] Junkertown 
+    - morning
+    - night
+- [ ] Rialto
+    - evening
+    - morning
+- [ ] Route 66
+    - morning
+    - overcast
+    - night
+- [ ] Shambali Monastery
+- [ ] Watchpoint: Gibraltar
+    - evening
+    - morning
+
+Flashpoint
+- [ ] New Junk City
+- [ ] Suravasa
+
+Hybrid
+- [ ] Blizzard World
+    - overcast
+    - night
+    - morning
+    - winter
+- [ ] Eichenwalde
+    - evening
+    - morning
+    - halloween
+- [ ] Hollywood
+    - night
+    - morning
+    - halloween
+- [ ] King's Row
+    - night
+    - evening
+    - winter
+- [ ] Midtown
+    - night
+    - morning
+- [ ] Numbani
+- [ ] Paraiso
+    - evening
+    - morning
+
+Push
+- [ ] Colosseo
+    - evening
+    - morning
+- [ ] Esperanca
+- [ ] New Queen Street
+    - dawn
+    - morning
+```
+
 ## Environment
 
 ```

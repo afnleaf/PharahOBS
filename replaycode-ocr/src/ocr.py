@@ -18,6 +18,14 @@ config_psm10 = "-l eng --oem 3 --psm 10 -c tessedit_char_whitelist=ABCDEFGHIJKLM
 # the directory we will store our images
 output_append = "/app/output/"
 
+map_image_names = [
+        "ilios.png",
+        "eichenwalde.png",
+        "dorado.png",
+        "colosseo.png",
+        "suravasa.png"
+    ]
+
 
 # tools  ----------------------------------------------------------------------
 
@@ -105,11 +113,15 @@ def template_match(img_input, templates):
     draw_boxes_around_templates(img_input, hits)
 
     # get raw cropped codes
-    raw_crops = get_raw_crops(img_final, hits)
+    raw_crops = get_raw_crops(img_final, hits)    
 
     # image processing on codes
     list_of_crops = process_crops(raw_crops)
-    return list_of_crops
+    
+    # get map blocks
+    map_crops = get_map_crops(img_final, hits)
+
+    return list_of_crops, map_crops
 
 
 # out of the generated templates make sure you only match with the valid ones
@@ -193,7 +205,7 @@ def get_raw_crops(img_final, hits):
     list_of_crops = []
 
     # loop through each locations
-    for index, box in enumerate(bboxes):        
+    for _, box in enumerate(bboxes):        
             #print(box)
 
             # positions for crop
@@ -215,6 +227,41 @@ def get_raw_crops(img_final, hits):
             list_of_crops.append(crop)
 
     return list_of_crops
+
+
+# templates for maps
+def get_map_crops(img_final, hits):
+    # get locations of matches out of the dataframe
+    bboxes = hits["BBox"].tolist()
+
+    # where we are storing all the crop data
+    list_of_maps = []
+
+    # loop through each locations
+    for i, box in enumerate(bboxes):        
+            #print(box)
+            scalefactor = 2.5
+            print(box)
+            if box[3] > 28:
+                scalefactor = 3
+            elif box[3] < 13:
+                scalefactor = 2
+            # positions for crop
+            template_width = box[2] + (1/box[2]) + 1
+            template_height = box[3]
+            start_y = box[1] + template_height + (template_height/4) + 1
+            end_y = start_y + template_height 
+            start_x = box[0] + template_width + 1
+            end_x = start_x + template_width * scalefactor
+            
+            crop = img_final[int(start_y):int(end_y), int(start_x):int(end_x)]
+
+            list_of_maps.append(crop)
+            if TEST:
+                output_filename = output_append + "map_" + str(i) + ".png"
+                cv.imwrite(output_filename, crop)
+
+    return list_of_maps
 
 
 # processed the cropped code images  ------------------------------------------
@@ -376,6 +423,45 @@ def process_code_mode2(crop, index):
     return code.strip()
 
 
+# processed the cropped map images  ------------------------------------------
+
+def process_maps(list_of_maps):
+    # list of map names
+    map_names = []
+
+    for i, crop in enumerate(list_of_maps):        
+        map_name = process_map_mode1(crop, i)
+        map_names.append(map_name)
+        
+    return map_names
+
+
+def process_map_mode1(crop, index):
+    
+    maps = load_maps()
+
+    for i, map_template in enumerate(maps):
+        result = cv.matchTemplate(crop, map_template, cv.TM_CCOEFF_NORMED)
+        threshold = 0.8
+        loc = np.where(result >= threshold)
+        if loc[0].size > 0:
+            #print(map_image_names[i])
+            image_name = map_image_names[i]
+            map_name = image_name[0:image_name.index(".")]
+            #print(map_name)
+            return map_name
+    return
+
+
+def load_maps():
+    maps = []
+    for map_image_name in map_image_names:
+        input_filename = "images/map_templates/" + map_image_name
+        map_image = cv.imread(input_filename, cv.IMREAD_GRAYSCALE)
+        maps.append(map_image)
+
+    return maps
+
 # standard --------------------------------------------------------------------
 
 # main function, small testing when bot is in prod 
@@ -385,12 +471,17 @@ def main():
     template = load_template(template_filename)
     list_of_templates = create_templates(template)
     # test an image
-    input_filename="/app/images/test_cases/image_case13.png"
+    input_filename="/app/images/test_cases/image_case12.png"
     image = cv.imread(input_filename)
     assert image is not None, "file could not be read, check with os.path.exists()"
-    crops = template_match(image, list_of_templates)
+    crops, map_crops = template_match(image, list_of_templates)
     replaycodes = process_codes(crops)
     print_codes(replaycodes)
+    # image processing on maps
+    list_of_maps = process_maps(map_crops)
+    print(list_of_maps)
+
+    
 
 
 # Default notation

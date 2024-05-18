@@ -5,10 +5,14 @@ import ocr
 async def get_response_from_ocr(message_id, image, list_of_templates) -> [str]:
     try:
         image_data = await ocr.load_image_from_discord(image)
-        crops = ocr.template_match(image_data, list_of_templates)
+        crops, map_crops = ocr.template_match(image_data, list_of_templates)        
+        # ocr on crops
         replaycodes = ocr.process_codes(crops)
+        # image processing on maps
+        list_of_maps = ocr.process_maps(map_crops)
+        
         if replaycodes:
-            return replaycodes_to_string(message_id, replaycodes)
+            return replaycodes_to_string(message_id, replaycodes, list_of_maps)
         else:
             return None
     except Exception as e:
@@ -30,9 +34,9 @@ def load_templates(template_filename):
 
 
 # turns replaycode list into message to be posted by the bot, add message_id
-def replaycodes_to_string(message_id: str, replaycodes: [str]) -> str:
+def replaycodes_to_string(message_id: str, replaycodes: [str], maps: [str]) -> str:
     text: str = ""
     text += f"{message_id}\n\n"
-    for code in replaycodes:
-        text += code + "\n"
+    for i, code in enumerate(replaycodes):
+        text += maps[i] + ":\t\t" + code + "\n"
     return text

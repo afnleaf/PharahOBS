@@ -14,8 +14,8 @@ def main() -> None:
     if ENV == "prod":
         client.main()
     elif ENV == "test":
-        #ocr.main()
-        test.main()
+        ocr.main()
+        #test.main()
     else:
         print("Error with ENVIRONMENT in .env file. Must be 'test' or 'prod'.")
 
