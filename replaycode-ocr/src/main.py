@@ -12,10 +12,12 @@ ENV: str = os.getenv("ENVIRONMENT")
 # main entry point
 def main() -> None:
     if ENV == "prod":
+        print("Loading client.")
         client.main()
     elif ENV == "test":
-        ocr.main()
-        #test.main()
+        print("Tests")
+        #ocr.main()
+        test.main()
     else:
         print("Error with ENVIRONMENT in .env file. Must be 'test' or 'prod'.")
 

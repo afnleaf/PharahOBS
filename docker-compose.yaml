@@ -6,6 +6,8 @@ services:
     container_name: replaycode-ocr
     volumes:
       - ./replaycode-ocr/output:/app/output
+      - ./replaycode-ocr/model-data:/app/model-data
     stdin_open: true
     tty: true
-    restart: unless-stopped
+    # uncomment this line in prod
+    #restart: unless-stopped

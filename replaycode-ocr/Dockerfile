@@ -2,6 +2,10 @@ FROM python:latest
 
 WORKDIR /app
 
+# Get TROCR model cache
+#COPY model.safetensors /app/model-data/
+#RUN --mount=type=cache,target=/app/model-data
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     libsm6 \
@@ -18,6 +22,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 CMD [ "python", "./src/main.py" ]
+#CMD [ "python", "trocr-test.py" ]
+#CMD [ "python", "./src/testtrocr.py" ]
 #CMD [ "python", "./src/ocr.py" ]
 #CMD [ "python", "./src/test.py" ]
 

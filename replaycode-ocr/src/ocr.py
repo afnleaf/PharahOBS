@@ -6,6 +6,9 @@ import pytesseract
 from dotenv import load_dotenv
 from MTM import matchTemplates, drawBoxesOnRGB
 from PIL import Image, ImageEnhance, ImageFilter
+#from cv2.typing import MatLike
+#from typing import List
+#from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 
 # to enable testing functionality
 load_dotenv()
@@ -18,6 +21,11 @@ config_psm10 = "-l eng --oem 3 --psm 10 -c tessedit_char_whitelist=ABCDEFGHIJKLM
 # the directory we will store our images
 output_append = "/app/output/"
 
+# load trocr model
+#trocr_processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-printed")
+#trocr_model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-printed")
+
+'''
 map_image_names = [
         "ilios.png",
         "eichenwalde.png",
@@ -25,7 +33,7 @@ map_image_names = [
         "colosseo.png",
         "suravasa.png"
     ]
-
+'''
 
 # tools  ----------------------------------------------------------------------
 
@@ -119,9 +127,11 @@ def template_match(img_input, templates):
     list_of_crops = process_crops(raw_crops)
     
     # get map blocks
-    map_crops = get_map_crops(img_final, hits)
+    #map_crops = get_map_crops(img_final, hits)
 
-    return list_of_crops, map_crops
+    #return list_of_crops, map_crops
+    return list_of_crops
+    #return raw_crops
 
 
 # out of the generated templates make sure you only match with the valid ones
@@ -159,6 +169,7 @@ def draw_boxes_around_templates(img_input, hits_sorted):
 
 
 # get locations of template found in input image
+#def get_hits(img_final: MatLike, list_of_templates: List[MatLike]) -> pd.DataFrame:
 def get_hits(img_final, list_of_templates):
     # find matches and store locations in a pandas dataframe
     hits = matchTemplates(list_of_templates,  
@@ -187,7 +198,7 @@ def process_crops(raw_crops):
             cv.imwrite(output_filename_before, crop)
         # process our replay code crops
         crop_final = process_cropped_image(crop)
-        list_of_crops.append(crop_final)
+        list_of_crops.append(np.array(crop_final))
         # after
         if TEST:
             output_filename_after = output_append + "after_" + str(i) + ".png"
@@ -223,6 +234,7 @@ def get_raw_crops(img_final, hits):
             end_x = start_x + template_width * scalefactor
             
             crop = img_final[start_y:int(end_y), start_x:int(end_x)]
+            cv.imwrite("output/test12312.png", crop)
 
             list_of_crops.append(crop)
 
@@ -262,7 +274,6 @@ def get_map_crops(img_final, hits):
                 cv.imwrite(output_filename, crop)
 
     return list_of_maps
-
 
 # processed the cropped code images  ------------------------------------------
 
@@ -328,11 +339,21 @@ def process_code_mode1(crop, index):
         if TEST:
             cv.imwrite(f"{output_append}char_{i}.png", letter)
 
-        # ocr 
+        # ocr tesseract 
         character = pytesseract.image_to_string(letter, config=config_psm8)
         if not character:
             character = pytesseract.image_to_string(letter, config=config_psm10)
         #print(f"str <{character.strip()}>")
+                
+        '''
+        letter_rgb = cv.cvtColor(letter,cv.COLOR_GRAY2RGB)
+        pixel_values = trocr_processor(letter_rgb, return_tensors="pt").pixel_values
+        #generated_ids = trocr_model.generate(pixel_values, max_length=1)
+        generated_ids = trocr_model.generate(pixel_values, max_new_tokens=1)
+        generated_text = trocr_processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        #print(generated_text.upper())
+        character = generated_text.upper()
+        '''
 
         # remove whitespace
         character = character.strip()
@@ -344,7 +365,7 @@ def process_code_mode1(crop, index):
             code += character[0]
         else:
             code += character
-
+        
         # green bounding box for testing
         color = (0, 255, 0)
         cv.rectangle(crop_copy, (int(rect_x), int(rect_y)),
@@ -352,6 +373,7 @@ def process_code_mode1(crop, index):
         output_filename = f"/app/output/boxedcontours_{index}.png"
         if TEST:
             cv.imwrite(output_filename, crop_copy)
+        
 
         # take first 6 letters
         if i == 5:
@@ -471,15 +493,15 @@ def main():
     template = load_template(template_filename)
     list_of_templates = create_templates(template)
     # test an image
-    input_filename="/app/images/test_cases/image_case12.png"
-    image = cv.imread(input_filename)
-    assert image is not None, "file could not be read, check with os.path.exists()"
-    crops, map_crops = template_match(image, list_of_templates)
+    #input_filename="/app/images/test_cases/image_case12.png"
+    #image = cv.imread(input_filename)
+    #assert image is not None, "file could not be read, check with os.path.exists()"
+    #crops, map_crops = template_match(image, list_of_templates)
     replaycodes = process_codes(crops)
     print_codes(replaycodes)
     # image processing on maps
-    list_of_maps = process_maps(map_crops)
-    print(list_of_maps)
+    #list_of_maps = process_maps(map_crops)
+    #print(list_of_maps)
 
     
 

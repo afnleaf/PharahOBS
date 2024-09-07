@@ -2,4 +2,9 @@ pytesseract
 opencv-python-headless
 discord
 python-dotenv
-Multi-Template-Matching
+pandas
+Multi-Template-Matching<2.0.0
+#transformers
+#requests
+Pillow
+#torch
