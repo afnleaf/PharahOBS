@@ -50,7 +50,7 @@ def main():
         crops = ocr.template_match(image, list_of_templates)
         replaycodes = []
         for crop in crops:
-            croprgb = cv.cvtColor(crop,cv.COLOR_GRAY2RGB)
+           croprgb = cv.cvtColor(crop,cv.COLOR_GRAY2RGB)
             pixel_values = processor(croprgb, return_tensors="pt").pixel_values
             #pixel_values = processor(crop, return_tensors="pt").pixel_values
             generated_ids = model.generate(pixel_values, max_length=6)
